@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hidayath Group Voice Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            transition: background 0.3s ease;
+        }
+
+        body.light-mode {
+            background: #f5f5f5;
+        }
+
+        body.dark-mode {
+            background: #1a1a1a;
+        }
+
+        .transcript-container {
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+            max-height: 800px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease-in-out;
+            width: 30rem;
+            border-radius: 12px;
+        }
+
+        body.light-mode .transcript-container {
+            background: white;
+            border: 1px solid #e5e5e5;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        body.dark-mode .transcript-container {
+            background: #111;
+            border: 1px solid #2a2a2a;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .inner-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-radius: 12px 12px 0 0;
+            transition: all 0.3s ease;
+        }
+
+        body.light-mode .header {
+            background: #f9f9f9;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        body.dark-mode .header {
+            background: #111;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        .header h3 {
+            font-size: 18px;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        body.light-mode .header h3 {
+            color: #111;
+        }
+
+        body.dark-mode .header h3 {
+            color: #f0f0f0;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .theme-toggle,
+        .clear-button {
+            background: none;
+            border: none;
+            border-radius: 6px;
+            padding: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+        }
+
+        body.light-mode .theme-toggle,
+        body.light-mode .clear-button {
+            color: #666;
+        }
+
+        body.light-mode .theme-toggle:hover,
+        body.light-mode .clear-button:hover {
+            color: #111;
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        body.dark-mode .theme-toggle,
+        body.dark-mode .clear-button {
+            color: #888;
+        }
+
+        body.dark-mode .theme-toggle:hover,
+        body.dark-mode .clear-button:hover {
+            color: #f0f0f0;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        body.light-mode .clear-button:hover {
+            color: #ef4444;
+        }
+
+        body.dark-mode .clear-button:hover {
+            color: #ef4444;
+        }
+
+        .sun-icon {
+            display: none;
+        }
+
+        .moon-icon {
+            display: block;
+        }
+
+        body.dark-mode .sun-icon {
+            display: block;
+        }
+
+        body.dark-mode .moon-icon {
+            display: none;
+        }
+
+        /* Transcript Content */
+        .transcript-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            scrollbar-width: thin;
+            scroll-behavior: smooth;
+            transition: all 0.3s ease;
+        }
+
+        body.light-mode .transcript-content {
+            background: #f9f9f9;
+            scrollbar-color: #ccc #f9f9f9;
+        }
+
+        body.dark-mode .transcript-content {
+            background: #111;
+            scrollbar-color: #444 #111;
+        }
+
+        .transcript-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        body.light-mode .transcript-content::-webkit-scrollbar-track {
+            background: #f9f9f9;
+        }
+
+        body.dark-mode .transcript-content::-webkit-scrollbar-track {
+            background: #111;
+        }
+
+        body.light-mode .transcript-content::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        body.dark-mode .transcript-content::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 3px;
+        }
+
+        .messages-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Message Bubble */
+        .message-row {
+            display: flex;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-row.user {
+            justify-content: flex-end;
+        }
+
+        .message-row.assistant {
+            justify-content: flex-start;
+        }
+
+        .message-bubble {
+            max-width: 80%;
+            min-width: 100px;
+            border-radius: 8px;
+            padding: 8px 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s;
+        }
+
+        body.light-mode .message-row.assistant .message-bubble {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        body.dark-mode .message-row.assistant .message-bubble {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .message-row.user .message-bubble {
+            background: #3b82f6;
+        }
+
+        body.dark-mode .message-row.user .message-bubble {
+            background: #2563eb;
+        }
+
+        .message-bubble.interim {
+            opacity: 0.6;
+            font-style: italic;
+        }
+
+        .message-sender {
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        body.light-mode .message-row.assistant .message-sender {
+            color: #3b82f6;
+        }
+
+        body.dark-mode .message-row.assistant .message-sender {
+            color: #60a5fa;
+        }
+
+        .message-row.user .message-sender {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .message-text {
+            font-size: 14px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        body.light-mode .message-row.assistant .message-text {
+            color: #1f1f1f;
+        }
+
+        body.dark-mode .message-row.assistant .message-text {
+            color: #e5e5e5;
+        }
+
+        .message-row.user .message-text {
+            color: white;
+        }
+
+        /* Empty state */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            padding: 20px;
+        }
+
+        body.light-mode .empty-state {
+            color: #999;
+        }
+
+        body.dark-mode .empty-state {
+            color: #666;
+        }
+
+        .empty-state svg {
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+        }
+
+        /* Mic Input Section */
+        .mic-input-section {
+            padding: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        body.light-mode .mic-input-section {
+            background: #f9f9f9;
+        }
+
+        body.dark-mode .mic-input-section {
+            background: #111;
+        }
+
+        .mic-button-wrapper {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .mic-button {
+            background: #3b82f6;
+            border: none;
+            border-radius: 50%;
+            width: 64px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 2;
+        }
+
+        .mic-button:hover {
+            background: #2563eb;
+            transform: scale(1.05);
+        }
+
+        .mic-button:active {
+            transform: scale(0.95);
+        }
+
+        .mic-button.listening {
+            background: #ef4444;
+        }
+
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .mic-button.listening ~ .ripple {
+            border: 1px solid #ef4444;
+            animation: ripple 2s ease-out infinite;
+        }
+
+        .ripple-1 {
+            width: 64px;
+            height: 64px;
+        }
+
+        .ripple-2 {
+            width: 64px;
+            height: 64px;
+            animation-delay: 0.5s;
+        }
+
+        .ripple-3 {
+            width: 64px;
+            height: 64px;
+            animation-delay: 1s;
+        }
+
+        @keyframes ripple {
+            0% {
+                transform: scale(1);
+                opacity: 0.6;
+            }
+            50% {
+                opacity: 0.3;
+            }
+            100% {
+                transform: scale(2.5);
+                opacity: 0;
+            }
+        }
+
+        .mic-button.listening {
+            animation: pulse-button 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse-button {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 0 20px rgba(239, 68, 68, 0);
+            }
+        }
+
+        /* Footer */
+        .footer {
+            padding: 8px 16px;
+            border-radius: 0 0 12px 12px;
+            transition: all 0.3s ease;
+        }
+
+        body.light-mode .footer {
+            background: #f9f9f9;
+            border-top: 1px solid #e5e5e5;
+        }
+
+        body.dark-mode .footer {
+            background: #111;
+            border-top: 1px solid #2a2a2a;
+        }
+
+        .footer-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .status-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+        }
+
+        .status-dot.recording {
+            background: #ef4444;
+            animation: blink 1s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        .status-label {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        body.light-mode .status-label {
+            color: #666;
+        }
+
+        body.dark-mode .status-label {
+            color: #888;
+        }
+
+        .call-duration {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+        }
+
+        body.light-mode .call-duration {
+            color: #666;
+        }
+
+        body.dark-mode .call-duration {
+            color: #888;
+        }
+
+        /* Hidden inputs for configuration */
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 0;
+            }
+            
+            .transcript-container {
+                width: 100%;
+                height: 100vh;
+                max-height: none;
+                border-radius: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="transcript-container">
+        <div class="inner-container">
+            <!-- Header -->
+            <div class="header">
+                <h3>Hidayath Group Voice Assistant</h3>
+                <div class="header-actions">
+                    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                        <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256">
+                            <path d="M120,40V16a8,8,0,0,1,16,0V40a8,8,0,0,1-16,0Zm72,88a64,64,0,1,1-64-64A64.07,64.07,0,0,1,192,128Zm-16,0a48,48,0,1,0-48,48A48.05,48.05,0,0,0,176,128ZM58.34,69.66A8,8,0,0,0,69.66,58.34l-16-16A8,8,0,0,0,42.34,53.66Zm0,116.68-16,16a8,8,0,0,0,11.32,11.32l16-16a8,8,0,0,0-11.32-11.32ZM192,72a8,8,0,0,0,5.66-2.34l16-16a8,8,0,0,0-11.32-11.32l-16,16A8,8,0,0,0,192,72Zm5.66,114.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32-11.32ZM48,128a8,8,0,0,0-8-8H16a8,8,0,0,0,0,16H40A8,8,0,0,0,48,128Zm80,80a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V216A8,8,0,0,0,128,208Zm112-88H216a8,8,0,0,0,0,16h24a8,8,0,0,0,0-16Z"></path>
+                        </svg>
+                        <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256">
+                            <path d="M233.54,142.23a8,8,0,0,0-8-2,88.08,88.08,0,0,1-109.8-109.8,8,8,0,0,0-10-10,104.84,104.84,0,0,0-52.91,37A104,104,0,0,0,136,224a103.09,103.09,0,0,0,62.52-20.88,104.84,104.84,0,0,0,37-52.91A8,8,0,0,0,233.54,142.23ZM188.9,190.34A88,88,0,0,1,65.66,67.11a89,89,0,0,1,31.4-26A106,106,0,0,0,96,56,104.11,104.11,0,0,0,200,160a106,106,0,0,0,14.92-1.06A89,89,0,0,1,188.9,190.34Z"></path>
+                        </svg>
+                    </button>
+                    <button class="clear-button" id="clearButton" aria-label="Clear transcript">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256">
+                            <path d="M216,48H176V40a24,24,0,0,0-24-24H104A24,24,0,0,0,80,40v8H40a8,8,0,0,0,0,16h8V208a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V64h8a8,8,0,0,0,0-16ZM96,40a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96Zm96,168H64V64H192ZM112,104v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Transcript Content -->
+            <div class="transcript-content" id="transcriptContent">
+                <div class="messages-container" id="messagesContainer">
+                    <div class="empty-state">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 256 256">
+                            <path d="M128,176a48.05,48.05,0,0,0,48-48V64a48,48,0,0,0-96,0v64A48.05,48.05,0,0,0,128,176ZM96,64a32,32,0,0,1,64,0v64a32,32,0,0,1-64,0Zm40,143.6V232a8,8,0,0,1-16,0V207.6A80.11,80.11,0,0,1,48,128a8,8,0,0,1,16,0,64,64,0,0,0,128,0,8,8,0,0,1,16,0A80.11,80.11,0,0,1,136,207.6Z"></path>
+                        </svg>
+                        <p>Click the microphone to start speaking</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mic Input Section -->
+            <div class="mic-input-section">
+                <div class="mic-button-wrapper">
+                    <button class="mic-button" id="micButton" aria-label="Toggle microphone">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="white" viewBox="0 0 256 256">
+                            <path d="M128,176a48.05,48.05,0,0,0,48-48V64a48,48,0,0,0-96,0v64A48.05,48.05,0,0,0,128,176ZM96,64a32,32,0,0,1,64,0v64a32,32,0,0,1-64,0Zm40,143.6V232a8,8,0,0,1-16,0V207.6A80.11,80.11,0,0,1,48,128a8,8,0,0,1,16,0,64,64,0,0,0,128,0,8,8,0,0,1,16,0A80.11,80.11,0,0,1,136,207.6Z"></path>
+                        </svg>
+                    </button>
+                    <div class="ripple ripple-1"></div>
+                    <div class="ripple ripple-2"></div>
+                    <div class="ripple ripple-3"></div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+                <div class="footer-content">
+                    <div class="status-container">
+                        <div class="status-dot" id="statusDot"></div>
+                        <span class="status-label" id="statusLabel">Active</span>
+                    </div>
+                    <div class="call-duration">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 256 256">
+                            <path d="M128,40a96,96,0,1,0,96,96A96.11,96.11,0,0,0,128,40Zm0,176a80,80,0,1,1,80-80A80.09,80.09,0,0,1,128,216ZM173.66,90.34a8,8,0,0,1,0,11.32l-40,40a8,8,0,0,1-11.32-11.32l40-40A8,8,0,0,1,173.66,90.34ZM96,16a8,8,0,0,1,8-8h48a8,8,0,0,1,0,16H104A8,8,0,0,1,96,16Z"></path>
+                        </svg>
+                        <span id="duration">00:00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden configuration inputs -->
+    <input type="hidden" id="serverUrl" value="http://localhost:8004" class="hidden">
+    <input type="hidden" id="wsUrl" value="ws://localhost:8004/ws/voice-assistant" class="hidden">
+
+    <script>
+        const micButton = document.getElementById('micButton');
+        const statusDot = document.getElementById('statusDot');
+        const statusLabel = document.getElementById('statusLabel');
+        const durationDisplay = document.getElementById('duration');
+        const themeToggle = document.getElementById('themeToggle');
+        const clearButton = document.getElementById('clearButton');
+        const messagesContainer = document.getElementById('messagesContainer');
+        const transcriptContent = document.getElementById('transcriptContent');
+        const serverUrlInput = document.getElementById('serverUrl');
+        const wsUrlInput = document.getElementById('wsUrl');
+
+        let isListening = false;
+        let startTime = null;
+        let timerInterval = null;
+        let interimMessageElement = null;
+        let websocket = null;
+        let audioContext = null;
+        let mediaStream = null;
+        let processor = null;
+
+        // Theme Management
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.body.className = savedTheme + '-mode';
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            document.body.className = newTheme + '-mode';
+            localStorage.setItem('theme', newTheme);
+        }
+
+        loadTheme();
+        themeToggle.addEventListener('click', toggleTheme);
+
+        // Clear transcript
+        clearButton.addEventListener('click', function() {
+            if (confirm('Are you sure you want to clear the transcript?')) {
+                messagesContainer.innerHTML = '';
+                showEmptyState();
+                
+                const serverUrl = serverUrlInput.value.trim();
+                fetch(`${serverUrl}/clear-conversation`, { method: 'POST' })
+                    .catch(err => console.error('Error clearing backend:', err));
+            }
+        });
+
+        function showEmptyState() {
+            messagesContainer.innerHTML = `
+                <div class="empty-state">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 256 256">
+                        <path d="M128,176a48.05,48.05,0,0,0,48-48V64a48,48,0,0,0-96,0v64A48.05,48.05,0,0,0,128,176ZM96,64a32,32,0,0,1,64,0v64a32,32,0,0,1-64,0Zm40,143.6V232a8,8,0,0,1-16,0V207.6A80.11,80.11,0,0,1,48,128a8,8,0,0,1,16,0,64,64,0,0,0,128,0,8,8,0,0,1,16,0A80.11,80.11,0,0,1,136,207.6Z"></path>
+                    </svg>
+                    <p>Click the microphone to start speaking</p>
+                </div>
+            `;
+        }
+
+        function scrollToBottom() {
+            transcriptContent.scrollTop = transcriptContent.scrollHeight;
+        }
+
+        function addMessage(text, sender, isInterim = false) {
+            const emptyState = messagesContainer.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+
+            if (isInterim) {
+                if (!interimMessageElement) {
+                    const messageRow = document.createElement('div');
+                    messageRow.className = `message-row ${sender.toLowerCase()}`;
+                    messageRow.innerHTML = `
+                        <div class="message-bubble interim">
+                            <div class="message-sender">
+                                <span>${sender}</span>
+                            </div>
+                            <div class="message-text">${text}</div>
+                        </div>
+                    `;
+                    messagesContainer.appendChild(messageRow);
+                    interimMessageElement = messageRow;
+                } else {
+                    const textElement = interimMessageElement.querySelector('.message-text');
+                    textElement.textContent = text;
+                }
+            } else {
+                if (interimMessageElement && sender === 'User') {
+                    const bubble = interimMessageElement.querySelector('.message-bubble');
+                    bubble.classList.remove('interim');
+                    const textElement = interimMessageElement.querySelector('.message-text');
+                    textElement.textContent = text;
+                    interimMessageElement = null;
+                } else {
+                    const messageRow = document.createElement('div');
+                    messageRow.className = `message-row ${sender.toLowerCase()}`;
+                    messageRow.innerHTML = `
+                        <div class="message-bubble">
+                            <div class="message-sender">
+                                <span>${sender}</span>
+                            </div>
+                            <div class="message-text">${text}</div>
+                        </div>
+                    `;
+                    messagesContainer.appendChild(messageRow);
+                }
+            }
+            
+            scrollToBottom();
+        }
+
+        // WebSocket streaming
+        async function startStreaming() {
+            try {
+                const wsUrl = wsUrlInput.value;
+                websocket = new WebSocket(wsUrl);
+                
+                websocket.onopen = async () => {
+                    console.log('✓ WebSocket connected');
+                    
+                    try {
+                        mediaStream = await navigator.mediaDevices.getUserMedia({ 
+                            audio: {
+                                sampleRate: 16000,
+                                channelCount: 1,
+                                echoCancellation: true,
+                                noiseSuppression: true
+                            } 
+                        });
+                        
+                        audioContext = new AudioContext({ sampleRate: 16000 });
+                        const source = audioContext.createMediaStreamSource(mediaStream);
+                        processor = audioContext.createScriptProcessor(4096, 1, 1);
+                        
+                        processor.onaudioprocess = (event) => {
+                            if (!websocket || websocket.readyState !== WebSocket.OPEN) return;
+
+                            const inputData = event.inputBuffer.getChannelData(0);
+                            const int16Data = new Int16Array(inputData.length);
+                            
+                            for (let i = 0; i < inputData.length; i++) {
+                                const sample = inputData[i];
+                                int16Data[i] = sample < 0 ? sample * 32768 : sample * 32767;
+                            }
+                            
+                            websocket.send(int16Data.buffer);
+                        };
+                        
+                        source.connect(processor);
+                        processor.connect(audioContext.destination);
+                        
+                    } catch (error) {
+                        console.error('Microphone error:', error);
+                        websocket.close();
+                    }
+                };
+                
+                websocket.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        handleServerMessage(data);
+                    } catch (error) {
+                        console.error('Error parsing message:', error);
+                    }
+                };
+                
+                websocket.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                    stopStreaming();
+                };
+                
+                websocket.onclose = () => {
+                    console.log('WebSocket closed');
+                    if (isListening) {
+                        stopStreaming();
+                    }
+                };
+                
+            } catch (error) {
+                console.error('Error starting stream:', error);
+            }
+        }
+
+        function stopStreaming() {
+            if (websocket) {
+                websocket.close();
+                websocket = null;
+            }
+            
+            if (processor) {
+                processor.disconnect();
+                processor = null;
+            }
+            
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
+            
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+                mediaStream = null;
+            }
+        }
+
+        function handleServerMessage(data) {
+            console.log('Received:', data);
+            
+            switch (data.type) {
+                case 'assistant_connected':
+                    console.log('Voice assistant connected');
+                    break;
+                
+                case 'transcription':
+                    if (data.is_final) {
+                        addMessage(data.text, 'User', false);
+                    } else {
+                        addMessage(data.text, 'User', true);
+                    }
+                    break;
+                
+                case 'llm_response':
+                    addMessage(data.text, 'Assistant', false);
+                    break;
+                
+                case 'tts_audio':
+                    console.log('🔊 Received TTS audio');
+                    if (data.audio_data) {
+                        playAudioFromBase64(data.audio_data);
+                    }
+                    break;
+                
+                case 'error':
+                    console.error('Server error:', data.message);
+                    break;
+            }
+        }
+
+        async function playAudioFromBase64(base64Data) {
+            try {
+                const audio = new Audio();
+                audio.src = `data:audio/mp3;base64,${base64Data}`;
+                await audio.play();
+            } catch (error) {
+                console.error('Audio playback error:', error);
+            }
+        }
+
+        // Microphone functionality
+        micButton.addEventListener('click', function() {
+            isListening = !isListening;
+            
+            if (isListening) {
+                micButton.classList.add('listening');
+                statusLabel.textContent = 'Recording';
+                statusDot.classList.add('recording');
+                
+                startTime = Date.now();
+                timerInterval = setInterval(updateDuration, 1000);
+                
+                startStreaming();
+                
+                console.log('Recording started...');
+            } else {
+                micButton.classList.remove('listening');
+                statusLabel.textContent = 'Active';
+                statusDot.classList.remove('recording');
+                
+                clearInterval(timerInterval);
+                durationDisplay.textContent = '00:00';
+                
+                interimMessageElement = null;
+                
+                stopStreaming();
+                
+                console.log('Recording stopped...');
+            }
+        });
+
+        function updateDuration() {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            durationDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        // Check browser support
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            console.error('Browser does not support audio recording');
+            micButton.disabled = true;
+            statusLabel.textContent = 'Not Supported';
+        }
+
+        // Test server connection
+        window.addEventListener('load', async () => {
+            const serverUrl = serverUrlInput.value.trim();
+            try {
+                const response = await fetch(`${serverUrl}/health`);
+                if (response.ok) {
+                    console.log('✅ Server connection successful');
+                } else {
+                    console.warn('⚠️ Server health check failed');
+                }
+            } catch (error) {
+                console.error('❌ Cannot connect to server:', error);
+            }
+        });
+    </script>
+</body>
+</html>

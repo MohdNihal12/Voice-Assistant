@@ -1,0 +1,156 @@
+[
+  {
+    "id": "AL1100",
+    "category": "Aluminum Sheets",
+    "product": "Aluminum 1100",
+    "grade": "1100",
+    "temper": "H14, H16, O",
+    "thickness": "0.5mm, 0.8mm, 1mm, 1.2mm, 1.5mm, 2mm, 3mm, 4mm, 5mm, 6mm",
+    "width": "1000mm, 1250mm",
+    "length": "2000mm, 2500mm",
+    "price_per_kg": "11 AED",
+    "price_per_sheet": "65 - 130 AED (depending on size)",
+    "finish": "Mill Finish, Polished, Brushed",
+    "applications": "General purpose fabrication, food packaging, chemical equipment, decorative items",
+    "min_order_quantity": "100 kg",
+    "delivery_time": "3-5 business days",
+    "specifications": {
+      "density": "2.71 g/cm³",
+      "purity": "99% aluminum",
+      "formability": "Excellent"
+    }
+  },
+  {
+    "id": "AL3003",
+    "category": "Aluminum Sheets",
+    "product": "Aluminum 3003",
+    "grade": "3003",
+    "temper": "H14, H16, H18, O",
+    "thickness": "0.5mm, 0.8mm, 1mm, 1.2mm, 1.5mm, 2mm, 3mm, 4mm, 5mm, 6mm",
+    "width": "1000mm, 1250mm",
+    "length": "2000mm, 2500mm",
+    "price_per_kg": "12.5 AED",
+    "price_per_sheet": "80 - 155 AED (depending on size)",
+    "finish": "Mill Finish, Anodized, Painted",
+    "applications": "Cooking utensils, pressure vessels, storage tanks, heat exchangers",
+    "min_order_quantity": "100 kg",
+    "delivery_time": "3-5 business days",
+    "specifications": {
+      "density": "2.73 g/cm³",
+      "corrosion_resistance": "Good",
+      "strength": "Medium"
+    }
+  },
+  {
+    "id": "AL5052",
+    "category": "Aluminum Sheets",
+    "product": "Aluminum 5052",
+    "grade": "5052",
+    "temper": "H32, H34, O",
+    "thickness": "1mm, 1.2mm, 1.5mm, 2mm, 3mm, 4mm, 5mm, 6mm",
+    "width": "1000mm, 1250mm, 1500mm",
+    "length": "2000mm, 2500mm, 3000mm",
+    "price_per_kg": "14 AED",
+    "price_per_sheet": "90 - 200 AED (depending on size)",
+    "finish": "Mill Finish, Polished, Anodized",
+    "applications": "Marine applications, automotive parts, truck bodies, fuel tanks",
+    "min_order_quantity": "100 kg",
+    "delivery_time": "3-5 business days",
+    "specifications": {
+      "density": "2.68 g/cm³",
+      "corrosion_resistance": "Excellent (saltwater)",
+      "strength": "High",
+      "welding": "Excellent weldability"
+    }
+  },
+  {
+    "id": "SS304",
+    "category": "Stainless Steel Sheets",
+    "product": "SS 304",
+    "grade": "304",
+    "type": "Austenitic",
+    "thickness": "0.5mm, 0.8mm, 1mm, 1.2mm, 1.5mm, 2mm, 3mm, 4mm, 5mm, 6mm, 8mm, 10mm, 12mm",
+    "width": "1000mm, 1250mm, 1500mm",
+    "length": "2000mm, 2500mm, 3000mm",
+    "price_per_kg": "15.5 AED",
+    "price_per_sheet": "90 - 220 AED (depending on size)",
+    "finish": "2B (Cold Rolled), BA (Bright Annealed), No.4 (Brushed), Hairline, Mirror (No.8)",
+    "applications": "Kitchen equipment, architectural applications, automotive trim, food processing equipment",
+    "min_order_quantity": "50 kg",
+    "delivery_time": "2-4 business days",
+    "specifications": {
+      "composition": "18% Chromium, 8% Nickel",
+      "corrosion_resistance": "Excellent",
+      "temperature_resistance": "Up to 870°C",
+      "magnetic": "Non-magnetic"
+    }
+  },
+  {
+    "id": "SS316",
+    "category": "Stainless Steel Sheets",
+    "product": "SS 316",
+    "grade": "316",
+    "type": "Austenitic with Molybdenum",
+    "thickness": "0.5mm, 0.8mm, 1mm, 1.2mm, 1.5mm, 2mm, 3mm, 4mm, 5mm, 6mm, 8mm, 10mm, 12mm",
+    "width": "1000mm, 1250mm, 1500mm",
+    "length": "2000mm, 2500mm, 3000mm",
+    "price_per_kg": "20 AED",
+    "price_per_sheet": "110 - 265 AED (depending on size)",
+    "finish": "2B (Cold Rolled), BA (Bright Annealed), No.4 (Brushed), Hairline, Mirror (No.8)",
+    "applications": "Marine applications, chemical processing equipment, medical equipment, pharmaceutical machinery",
+    "min_order_quantity": "50 kg",
+    "delivery_time": "2-4 business days",
+    "specifications": {
+      "composition": "18% Chromium, 10% Nickel, 2% Molybdenum",
+      "corrosion_resistance": "Superior (chloride resistance)",
+      "temperature_resistance": "Up to 870°C",
+      "magnetic": "Non-magnetic"
+    }
+  },
+  {
+    "id": "SS316L",
+    "category": "Stainless Steel Sheets",
+    "product": "SS 316L",
+    "grade": "316L (Low Carbon)",
+    "type": "Austenitic with Low Carbon",
+    "thickness": "0.5mm, 0.8mm, 1mm, 1.2mm, 1.5mm, 2mm, 3mm, 4mm, 5mm, 6mm, 8mm, 10mm",
+    "width": "1000mm, 1250mm, 1500mm",
+    "length": "2000mm, 2500mm, 3000mm",
+    "price_per_kg": "21 AED",
+    "price_per_sheet": "125 - 285 AED (depending on size)",
+    "finish": "2B (Cold Rolled), BA (Bright Annealed), No.4 (Brushed), Hairline, Mirror (No.8)",
+    "applications": "Surgical instruments, pharmaceutical equipment, chemical tanks, food processing",
+    "min_order_quantity": "50 kg",
+    "delivery_time": "3-5 business days",
+    "specifications": {
+      "composition": "18% Chromium, 10% Nickel, 2% Molybdenum, <0.03% Carbon",
+      "corrosion_resistance": "Superior (better welding characteristics)",
+      "temperature_resistance": "Up to 870°C",
+      "magnetic": "Non-magnetic",
+      "welding": "Excellent (no carbide precipitation)"
+    }
+  },
+  {
+    "id": "SS430",
+    "category": "Stainless Steel Sheets",
+    "product": "SS 430",
+    "grade": "430",
+    "type": "Ferritic",
+    "thickness": "0.8mm, 1mm, 1.2mm, 1.5mm, 2mm, 3mm, 4mm, 5mm",
+    "width": "1000mm, 1250mm",
+    "length": "2000mm, 2500mm",
+    "price_per_kg": "12.5 AED",
+    "price_per_sheet": "80 - 175 AED (depending on size)",
+    "finish": "2B (Cold Rolled), BA (Bright Annealed), No.4 (Brushed)",
+    "applications": "Decorative trim, automotive applications, appliance parts, sinks",
+    "min_order_quantity": "50 kg",
+    "delivery_time": "2-4 business days",
+    "specifications": {
+      "composition": "16-18% Chromium",
+      "corrosion_resistance": "Good (non-marine)",
+      "temperature_resistance": "Up to 815°C",
+      "magnetic": "Magnetic",
+      "cost_effective": "Most economical stainless steel"
+    }
+  }
+]
