@@ -1,25 +1,32 @@
-# app/tts.py
+# app/tts.py - IMPROVED VERSION WITH BETTER INTERRUPTION CONTROL
 import os
 import asyncio
-import queue
 import threading
 from typing import Optional, Dict, Any
 from dotenv import load_dotenv
 from elevenlabs.client import ElevenLabs
-from elevenlabs import play
+import pyaudio
+import wave
+import tempfile
 import io
+from pydub import AudioSegment
+import time
 import logging
 
 # Load environment variables
 load_dotenv()
 
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 class ElevenLabsTTS:
     """
-    ElevenLabs Text-to-Speech integration for voice assistant responses
+    ElevenLabs Text-to-Speech with robust audio interruption control
     """
     
     def __init__(self, 
-                 voice_id: str = "A9ATTqUUQ6GHu0coCz8t",
+                 voice_id: str = "iP95p4xoKVk53GoZ742B",
                  model_id: str = "eleven_multilingual_v2",
                  output_format: str = "mp3_44100_128"):
         
@@ -27,200 +34,270 @@ class ElevenLabsTTS:
         self.model_id = model_id
         self.output_format = output_format
         self.client = None
-        self.audio_queue = queue.Queue()
-        self.is_playing = False
-        self.stop_playback = False
-        self.playback_thread = None
         
-        self._initialize_client()
+        # Audio playback control with thread-safe operations
+        self._is_playing = False
+        self._stop_playback = False
+        self._current_stream = None
+        self._pyaudio = None
+        self._playback_lock = threading.RLock()  # Use RLock for reentrant locks
+        self._playback_thread = None
+        
+        self._initialize_client_and_audio()
     
-    def _initialize_client(self):
-        """Initialize the ElevenLabs client"""
+    def _initialize_client_and_audio(self):
+        """Initialize the ElevenLabs client and PyAudio"""
         try:
             api_key = os.getenv("ELEVENLABS_API_KEY")
             if not api_key:
-                print("❌ ELEVENLABS_API_KEY not found in environment variables")
+                logger.error("ELEVENLABS_API_KEY not found in environment variables")
                 raise ValueError("ELEVENLABS_API_KEY not found in environment variables")
             
             self.client = ElevenLabs(api_key=api_key)
-            print(f"✅ ElevenLabs TTS initialized")
-            print(f"   Voice ID: {self.voice_id}")
-            print(f"   Model: {self.model_id}")
             
-            # Test the connection with a short text
-            test_text = "Hello"
-            try:
-                audio = self.client.text_to_speech.convert(
-                    text=test_text,
-                    voice_id=self.voice_id,
-                    model_id=self.model_id,
-                    output_format=self.output_format,
-                )
-                print("✅ ElevenLabs connection test successful")
-            except Exception as e:
-                print(f"❌ ElevenLabs connection test failed: {e}")
-                raise
+            # Initialize PyAudio
+            self._pyaudio = pyaudio.PyAudio()
+            
+            logger.info(f"ElevenLabs TTS initialized with PyAudio control")
+            logger.info(f"Voice ID: {self.voice_id}, Model: {self.model_id}")
                 
         except Exception as e:
-            print(f"❌ Failed to initialize ElevenLabs TTS: {e}")
+            logger.error(f"Failed to initialize ElevenLabs TTS: {e}")
             self.client = None
     
-    async def text_to_speech(self, text: str, play_audio: bool = True) -> Optional[bytes]:
+    @property
+    def is_playing(self):
+        """Thread-safe access to playing state"""
+        with self._playback_lock:
+            return self._is_playing
+    
+    def stop_current_audio(self):
+        """Force stop the currently playing audio - SYNCHRONOUS VERSION"""
+        with self._playback_lock:
+            if self._is_playing:
+                logger.info("🛑 Force stopping current audio playback")
+                self._stop_playback = True
+                
+                # Stop the PyAudio stream immediately
+                if self._current_stream:
+                    try:
+                        self._current_stream.stop_stream()
+                        self._current_stream.close()
+                        logger.debug("PyAudio stream closed")
+                    except Exception as e:
+                        logger.warning(f"Error closing stream: {e}")
+                    finally:
+                        self._current_stream = None
+                
+                self._is_playing = False
+                
+                # Wait for playback thread to finish if it exists
+                if self._playback_thread and self._playback_thread.is_alive():
+                    logger.debug("Waiting for playback thread to terminate...")
+                    self._playback_thread.join(timeout=1.0)  # Wait up to 1 second
+                    if self._playback_thread.is_alive():
+                        logger.warning("Playback thread did not terminate cleanly")
+                
+                self._playback_thread = None
+        
+        # Small delay to ensure cleanup
+        time.sleep(0.05)
+        logger.info("✅ Audio playback stopped successfully")
+    
+    async def text_to_speech(self, text: str, play_audio: bool = True, interrupt_current: bool = True) -> Optional[bytes]:
         """
-        Convert text to speech using ElevenLabs
+        Convert text to speech with robust interruption control
         
         Args:
             text: Text to convert to speech
             play_audio: Whether to play the audio immediately
+            interrupt_current: Whether to interrupt currently playing audio
             
         Returns:
             Audio data as bytes if successful, None otherwise
         """
         if not self.client:
-            print("❌ ElevenLabs client not initialized")
+            logger.error("ElevenLabs client not initialized")
             return None
         
         if not text or not text.strip():
-            print("⚠️ Empty text provided for TTS")
+            logger.warning("Empty text provided for TTS")
             return None
         
         try:
-            print(f"🔊 Converting text to speech: '{text[:50]}...'")
+            logger.info(f"Converting text to speech: '{text[:50]}...'")
             
-            # Convert text to speech - FIXED: Use proper async handling
-            audio = self.client.text_to_speech.convert(
-                text=text,
-                voice_id=self.voice_id,
-                model_id=self.model_id,
-                output_format=self.output_format,
-            )
+            # Stop current playback if requested - DO THIS FIRST
+            if interrupt_current:
+                # Call synchronous stop method
+                await asyncio.get_event_loop().run_in_executor(None, self.stop_current_audio)
             
-            # Collect all audio data
-            audio_data = b""
-            for chunk in audio:
-                if chunk:
-                    audio_data += chunk
+            # Generate audio data
+            audio_data = await self._generate_audio_data(text)
             
-            print(f"✅ TTS conversion successful - {len(audio_data)} bytes")
-            
-            if play_audio:
-                await self.play_audio(audio_data)
+            if audio_data and play_audio:
+                await self._play_audio_async(audio_data)
             
             return audio_data
             
         except Exception as e:
-            print(f"❌ TTS conversion failed: {e}")
+            logger.error(f"TTS conversion failed: {e}")
+            import traceback
+            traceback.print_exc()
             return None
     
-    async def play_audio(self, audio_data: bytes):
-        """
-        Play audio data
-        
-        Args:
-            audio_data: Audio data to play
-        """
+    async def _generate_audio_data(self, text: str) -> Optional[bytes]:
+        """Generate audio data from text using ElevenLabs API"""
         try:
-            print("🔊 Playing audio...")
-            play(audio_data)
-            print("✅ Audio playback completed")
-        except Exception as e:
-            print(f"❌ Audio playback failed: {e}")
-    
-    def start_playback_thread(self):
-        """Start the background playback thread"""
-        if self.playback_thread and self.playback_thread.is_alive():
-            return
-        
-        self.stop_playback = False
-        self.playback_thread = threading.Thread(target=self._playback_worker, daemon=True)
-        self.playback_thread.start()
-        print("✅ Playback thread started")
-    
-    def stop_playback_thread(self):
-        """Stop the background playback thread"""
-        self.stop_playback = True
-        if self.playback_thread and self.playback_thread.is_alive():
-            self.playback_thread.join(timeout=5)
-        print("🛑 Playback thread stopped")
-    
-    def _playback_worker(self):
-        """Background worker for playing audio from queue"""
-        while not self.stop_playback:
-            try:
-                # Get audio data from queue with timeout
-                audio_data = self.audio_queue.get(timeout=1.0)
-                if audio_data is None:  # Sentinel value to stop
-                    break
-                
-                self.is_playing = True
-                play(audio_data)
-                self.is_playing = False
-                self.audio_queue.task_done()
-                
-            except queue.Empty:
-                continue
-            except Exception as e:
-                print(f"❌ Playback worker error: {e}")
-                self.is_playing = False
-    
-    def queue_audio(self, audio_data: bytes):
-        """
-        Queue audio data for playback in background thread
-        
-        Args:
-            audio_data: Audio data to queue for playback
-        """
-        if audio_data:
-            self.audio_queue.put(audio_data)
-            print("✅ Audio queued for playback")
-    
-    def queue_text(self, text: str):
-        """
-        Convert text to speech and queue it for playback
-        
-        Args:
-            text: Text to convert and queue
-        """
-        if not text or not text.strip():
-            return
-        
-        # Run TTS in a thread and queue the result
-        def tts_and_queue():
-            try:
-                audio = self.client.text_to_speech.convert(
+            loop = asyncio.get_event_loop()
+            audio_generator = await loop.run_in_executor(
+                None,
+                lambda: self.client.text_to_speech.convert(
                     text=text,
                     voice_id=self.voice_id,
                     model_id=self.model_id,
                     output_format=self.output_format,
                 )
-                # Collect all chunks
-                audio_data = b""
-                for chunk in audio:
-                    if chunk:
-                        audio_data += chunk
-                self.queue_audio(audio_data)
-            except Exception as e:
-                print(f"❌ TTS queuing failed: {e}")
-        
-        threading.Thread(target=tts_and_queue, daemon=True).start()
+            )
+            
+            # Collect all audio data
+            audio_data = b""
+            for chunk in audio_generator:
+                if chunk:
+                    audio_data += chunk
+            
+            logger.info(f"TTS conversion successful - {len(audio_data)} bytes")
+            return audio_data
+            
+        except Exception as e:
+            logger.error(f"Audio generation failed: {e}")
+            return None
     
-    async def generate_and_speak(self, llm_response: Dict[str, Any]):
+    async def _play_audio_async(self, audio_data: bytes):
+        """Play audio data asynchronously with interruption support"""
+        if not audio_data:
+            return
+        
+        try:
+            logger.info("Playing audio with interruption control...")
+            
+            # Convert MP3 to WAV for PyAudio playback
+            wav_data = await self._convert_mp3_to_wav(audio_data)
+            if not wav_data:
+                logger.error("Failed to convert audio to WAV format")
+                return
+            
+            # Use thread pool executor for synchronous playback
+            await asyncio.get_event_loop().run_in_executor(
+                None, 
+                lambda: self._play_audio_sync(wav_data)
+            )
+                
+        except Exception as e:
+            logger.error(f"Audio playback failed: {e}")
+    
+    def _play_audio_sync(self, wav_data: bytes):
+        """Synchronous audio playback with real-time interruption checking"""
+        with self._playback_lock:
+            if self._stop_playback:
+                logger.info("Playback aborted before starting")
+                return
+                
+            self._is_playing = True
+            self._stop_playback = False
+        
+        try:
+            # Write WAV data to temporary file
+            with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmp_file:
+                tmp_file.write(wav_data)
+                tmp_file.flush()
+                temp_filename = tmp_file.name
+            
+            # Open the WAV file
+            with wave.open(temp_filename, 'rb') as wf:
+                # Get audio parameters
+                sample_width = wf.getsampwidth()
+                channels = wf.getnchannels()
+                frame_rate = wf.getframerate()
+                frames_per_buffer = 1024
+                
+                # Open PyAudio stream
+                stream = self._pyaudio.open(
+                    format=self._pyaudio.get_format_from_width(sample_width),
+                    channels=channels,
+                    rate=frame_rate,
+                    output=True,
+                    frames_per_buffer=frames_per_buffer
+                )
+                
+                with self._playback_lock:
+                    self._current_stream = stream
+                
+                # Play audio in chunks with interruption checking
+                data = wf.readframes(frames_per_buffer)
+                while data and not self._stop_playback:
+                    stream.write(data)
+                    data = wf.readframes(frames_per_buffer)
+                
+                # Clean up stream
+                stream.stop_stream()
+                stream.close()
+                
+                with self._playback_lock:
+                    self._current_stream = None
+            
+            # Clean up temporary file
+            try:
+                os.unlink(temp_filename)
+            except Exception as e:
+                logger.warning(f"Could not delete temp file: {e}")
+            
+            if self._stop_playback:
+                logger.info("Playback was interrupted")
+            else:
+                logger.info("Playback completed successfully")
+                
+        except Exception as e:
+            logger.error(f"Audio playback error: {e}")
+        finally:
+            with self._playback_lock:
+                self._is_playing = False
+    
+    async def _convert_mp3_to_wav(self, mp3_data: bytes) -> Optional[bytes]:
+        """Convert MP3 data to WAV format for PyAudio playback"""
+        try:
+            # Create AudioSegment from MP3 data
+            audio_segment = AudioSegment.from_mp3(io.BytesIO(mp3_data))
+            
+            # Convert to WAV
+            wav_io = io.BytesIO()
+            audio_segment.export(wav_io, format="wav")
+            wav_data = wav_io.getvalue()
+            
+            return wav_data
+            
+        except Exception as e:
+            logger.error(f"MP3 to WAV conversion failed: {e}")
+            return None
+    
+    async def generate_and_speak(self, llm_response: Dict[str, Any], interrupt_current: bool = True):
         """
         Generate speech from LLM response text
         
         Args:
-            llm_response: Response dictionary from OllamaLLM
+            llm_response: Response dictionary from LLM
+            interrupt_current: Whether to interrupt current playback
         """
         if not llm_response or not llm_response.get('success'):
-            print("⚠️ Invalid LLM response for TTS")
+            logger.warning("Invalid LLM response for TTS")
             return
         
         text = llm_response.get('text', '').strip()
         if not text:
-            print("⚠️ Empty text in LLM response")
+            logger.warning("Empty text in LLM response")
             return
         
-        await self.text_to_speech(text)
+        await self.text_to_speech(text, interrupt_current=interrupt_current)
     
     def get_voice_info(self) -> Dict[str, Any]:
         """Get information about the current voice configuration"""
@@ -228,72 +305,17 @@ class ElevenLabsTTS:
             'voice_id': self.voice_id,
             'model_id': self.model_id,
             'output_format': self.output_format,
-            'queue_size': self.audio_queue.qsize(),
             'is_playing': self.is_playing,
-            'client_initialized': self.client is not None
+            'client_initialized': self.client is not None,
+            'pyaudio_initialized': self._pyaudio is not None
         }
     
-    def clear_queue(self):
-        """Clear the audio queue"""
-        while not self.audio_queue.empty():
-            try:
-                self.audio_queue.get_nowait()
-                self.audio_queue.task_done()
-            except queue.Empty:
-                break
-        print("🗑️ Audio queue cleared")
-
-# Pre-configured voices for different use cases
-VOICE_PRESETS = {
-    "professional_male": "JBFqnCBsd6RMkjVDRZzb",  # Your current voice
-    "professional_female": "Rachel",
-    "friendly_male": "Adam",
-    "friendly_female": "Dorothy",
-    "multilingual": "Arnold"  # Good for multiple languages
-}
-
-def create_tts_with_preset(voice_preset: str = "professional_male") -> ElevenLabsTTS:
-    """
-    Create a TTS instance with a preset voice
+    def cleanup(self):
+        """Cleanup resources - call this when shutting down"""
+        self.stop_current_audio()
+        if self._pyaudio:
+            self._pyaudio.terminate()
     
-    Args:
-        voice_preset: One of the preset voice names
-        
-    Returns:
-        Configured ElevenLabsTTS instance
-    """
-    voice_id = VOICE_PRESETS.get(voice_preset, VOICE_PRESETS["professional_male"])
-    return ElevenLabsTTS(voice_id=voice_id)
-
-# Example usage and test function
-async def test_tts():
-    """Test function for TTS functionality"""
-    print("🧪 Testing ElevenLabs TTS...")
-    
-    tts = ElevenLabsTTS()
-    
-    if not tts.client:
-        print("❌ TTS client not available - skipping test")
-        return
-    
-    # Test direct TTS
-    test_texts = [
-        "Hello! This is the Hidayath Group sales assistant. How can I help you today?",
-        "I can help you with product information, pricing, and availability.",
-        "Thank you for contacting Hidayath Group!"
-    ]
-    
-    for i, text in enumerate(test_texts, 1):
-        print(f"\n🔊 Test {i}: '{text}'")
-        audio_data = await tts.text_to_speech(text, play_audio=False)
-        if audio_data:
-            print(f"✅ Test {i} successful - generated {len(audio_data)} bytes")
-        else:
-            print(f"❌ Test {i} failed")
-        await asyncio.sleep(1)  # Brief pause between tests
-    
-    print("\n✅ TTS test completed successfully")
-
-if __name__ == "__main__":
-    # Run test if script is executed directly
-    asyncio.run(test_tts())
+    def __del__(self):
+        """Cleanup resources"""
+        self.cleanup()

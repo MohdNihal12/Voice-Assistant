@@ -51,7 +51,7 @@ class ProductSearchRequest(BaseModel):
 
 app = FastAPI(
     title="Real-Time Voice Assistant API",
-    description="Deepgram Nova 2 Streaming STT + Ollama LLM + ElevenLabs TTS + Product Search",
+    description="Deepgram Nova 3 Streaming STT + gpt oss-20b + ElevenLabs TTS + Product Search",
     version="4.1.0"
 )
 
@@ -109,7 +109,7 @@ async def initialize_services():
         print("🔊 Initializing ElevenLabs TTS...")
         try:
             tts_engine = ElevenLabsTTS(
-                voice_id="JBFqnCBsd6RMkjVDRZzb",
+                voice_id="iP95p4xoKVk53GoZ742B",
                 model_id="eleven_multilingual_v2",
                 output_format="mp3_44100_128"
             )
@@ -119,15 +119,16 @@ async def initialize_services():
             tts_engine = None
         
         # Initialize Remote GPT LLM with Product Search
-        print("\n🧠 Initializing Remote GPT LLM with Product Search...")
+        print("\n🧠 Initializing OpenAI LLM with Product Search...")
         try:
             RemoteGPT = RemoteGPTLLM(
-                remote_url="http://10.0.17.132:8008",
+                api_key=os.getenv("OPENAI_API_KEY"),
+                model="gpt-4o-mini",  # or "gpt-4" if you have access
                 product_search=product_search
             )
-            print("✅ Remote GPT LLM with Product Search initialized successfully")
+            print("✅ OpenAI LLM with Product Search initialized successfully")
         except Exception as e:
-            print(f"❌ Failed to initialize Remote GPT LLM: {e}")
+            print(f"❌ Failed to initialize OpenAI LLM: {e}")
             # Fallback to a simple LLM
             class FallbackLLM:
                 async def generate_response(self, text):
@@ -197,10 +198,19 @@ manager = ConnectionManager()
 # ============================================================================
 
 async def handle_assistant_transcription_callback(transcription_data: Dict, client_websocket: WebSocket):
-    """Handle transcriptions and generate LLM responses with TTS"""
+    """Handle transcriptions and generate LLM responses with TTS - ROBUST INTERRUPTION"""
     try:
+        # Check if websocket is still open before sending
+        if client_websocket.client_state.name != "CONNECTED":
+            print("⚠️ WebSocket not connected, skipping transcription send")
+            return
+        
         # Send transcription to client
-        await client_websocket.send_json(transcription_data)
+        try:
+            await client_websocket.send_json(transcription_data)
+        except Exception as e:
+            print(f"⚠️ Failed to send transcription: {e}")
+            return
         
         if transcription_data.get('is_final', False):
             manager.increment_utterances(client_websocket)
@@ -211,14 +221,37 @@ async def handle_assistant_transcription_callback(transcription_data: Dict, clie
             if len(final_text.strip()) > 1:
                 print("🧠 Generating AI response with product search...")
                 
+                # ROBUST TTS INTERRUPTION - Stop immediately and wait for completion
+                if tts_engine:
+                    print("🛑 FORCE STOPPING ALL TTS PLAYBACK FOR NEW QUESTION")
+                    # Use synchronous stop with timeout
+                    try:
+                        await asyncio.wait_for(
+                            asyncio.get_event_loop().run_in_executor(
+                                None, 
+                                tts_engine.stop_current_audio
+                            ),
+                            timeout=2.0
+                        )
+                        print("✅ TTS playback stopped successfully")
+                    except asyncio.TimeoutError:
+                        print("⚠️ TTS stop timed out, continuing anyway")
+                    except Exception as e:
+                        print(f"⚠️ Error stopping TTS: {e}")
+                
                 try:
-                    # Generate Ollama response with timeout
+                    # Generate LLM response with timeout
                     llm_response = await asyncio.wait_for(
                         RemoteGPT.generate_response(final_text),
                         timeout=15.0
                     )
                     
-                    # Send Ollama response to client
+                    # Check websocket state before sending response
+                    if client_websocket.client_state.name != "CONNECTED":
+                        print("⚠️ WebSocket disconnected during LLM generation")
+                        return
+                    
+                    # Send LLM response to client
                     response_data = {
                         "type": "llm_response",
                         "text": llm_response['text'],
@@ -227,63 +260,252 @@ async def handle_assistant_transcription_callback(transcription_data: Dict, clie
                         "success": llm_response['success'],
                         "products_used": llm_response.get('products_used_in_context', 0)
                     }
-                    await client_websocket.send_json(response_data)
                     
-                    print(f"🤖 AI Response: '{llm_response['text']}'")
-                    print(f"📦 Products used in context: {llm_response.get('products_used_in_context', 0)}")
+                    try:
+                        await client_websocket.send_json(response_data)
+                        print(f"🤖 AI Response: '{llm_response['text']}'")
+                        print(f"📦 Products used in context: {llm_response.get('products_used_in_context', 0)}")
+                    except Exception as e:
+                        print(f"⚠️ Failed to send LLM response: {e}")
+                        return
                     
-                    # Generate TTS audio if TTS is available
+                    # Generate TTS audio if TTS is available and response is successful
                     if tts_engine and llm_response.get('success'):
-                        print("🔊 Generating TTS audio...")
-                        try:
-                            audio_data = await tts_engine.text_to_speech(
+                        print("🔊 Generating TTS audio with interruption...")
+                        
+                        # Run TTS generation in background
+                        asyncio.create_task(
+                            generate_and_send_tts_with_interrupt(
                                 llm_response['text'], 
-                                play_audio=False  # Don't play, we'll send to client
+                                client_websocket
                             )
-                            
-                            if audio_data:
-                                # Convert audio to base64 for WebSocket transmission
-                                audio_base64 = base64.b64encode(audio_data).decode('utf-8')
-                                
-                                # Send TTS audio to client
-                                await client_websocket.send_json({
-                                    "type": "tts_audio",
-                                    "audio_data": audio_base64,
-                                    "text": llm_response['text'],
-                                    "timestamp": datetime.now().isoformat()
-                                })
-                                print("✅ TTS audio sent to client")
-                            else:
-                                print("⚠️ TTS audio generation failed")
-                                
-                        except Exception as tts_error:
-                            print(f"❌ TTS generation error: {tts_error}")
+                        )
                     
                 except asyncio.TimeoutError:
-                    print("❌ Ollama response timeout")
-                    timeout_response = {
-                        "type": "llm_response",
-                        "text": "I'm taking too long to respond. Please try again.",
-                        "timestamp": datetime.now().isoformat(),
-                        "model": "timeout",
-                        "success": False
-                    }
-                    await client_websocket.send_json(timeout_response)
+                    print("❌ LLM response timeout")
+                    if client_websocket.client_state.name == "CONNECTED":
+                        try:
+                            timeout_response = {
+                                "type": "llm_response",
+                                "text": "I'm taking too long to respond. Please try again.",
+                                "timestamp": datetime.now().isoformat(),
+                                "model": "timeout",
+                                "success": False
+                            }
+                            await client_websocket.send_json(timeout_response)
+                        except:
+                            pass
                     
                 except Exception as e:
-                    print(f"❌ Ollama generation error: {e}")
-                    error_response = {
-                        "type": "llm_response",
-                        "text": "I encountered an error while generating a response. Please try again.",
-                        "timestamp": datetime.now().isoformat(),
-                        "model": "error",
-                        "success": False
-                    }
-                    await client_websocket.send_json(error_response)
+                    print(f"❌ LLM generation error: {e}")
+                    if client_websocket.client_state.name == "CONNECTED":
+                        try:
+                            error_response = {
+                                "type": "llm_response",
+                                "text": "I encountered an error while generating a response. Please try again.",
+                                "timestamp": datetime.now().isoformat(),
+                                "model": "error",
+                                "success": False
+                            }
+                            await client_websocket.send_json(error_response)
+                        except:
+                            pass
     
     except Exception as e:
         print(f"❌ Error in assistant callback: {e}")
 
+async def generate_and_send_tts_with_interrupt(text: str, client_websocket: WebSocket):
+    """
+    Generate TTS audio with proper interruption handling
+    """
+    try:
+        # Check websocket is still connected
+        if client_websocket.client_state.name != "CONNECTED":
+            print("⚠️ WebSocket not connected, skipping TTS generation")
+            return
+        
+        print(f"🔊 Converting text to speech: '{text[:50]}...'")
+        
+        # Generate TTS with force interruption
+        try:
+            audio_data = await asyncio.wait_for(
+                tts_engine.text_to_speech(text, play_audio=False, interrupt_current=True),
+                timeout=10.0
+            )
+        except asyncio.TimeoutError:
+            print("⏰ TTS generation timed out")
+            return
+        
+        if audio_data:
+            # Double-check websocket is still connected before sending
+            if client_websocket.client_state.name != "CONNECTED":
+                print("⚠️ WebSocket disconnected during TTS generation, discarding audio")
+                return
+            
+            # Convert audio to base64
+            audio_base64 = base64.b64encode(audio_data).decode('utf-8')
+            
+            # Send TTS audio to client with interrupt flag
+            try:
+                await client_websocket.send_json({
+                    "type": "tts_audio",
+                    "audio_data": audio_base64,
+                    "text": text,
+                    "timestamp": datetime.now().isoformat(),
+                    "interrupt_previous": True
+                })
+                print(f"✅ TTS audio sent to client ({len(audio_data)} bytes)")
+                
+            except Exception as send_error:
+                print(f"⚠️ Failed to send TTS audio: {send_error}")
+        else:
+            print("⚠️ TTS audio generation failed - no data returned")
+            
+    except Exception as e:
+        print(f"❌ TTS generation error: {e}")
+        import traceback
+        traceback.print_exc()
+
+# ============================================================================
+# IMPROVED: WebSocket Endpoint with Better Error Handling
+# ============================================================================
+
+@app.websocket("/ws/voice-assistant")
+async def websocket_voice_assistant(websocket: WebSocket):
+    """
+    WebSocket endpoint for full voice assistant with STT + LLM + TTS + Product Search
+    IMPROVED: Better connection management and error handling
+    """
+    await manager.connect(websocket)
+    
+    deepgram_connection = None
+    receive_task = None
+    
+    try:
+        print("\n" + "="*80)
+        print("🎯 VOICE ASSISTANT SESSION STARTED")
+        print("="*80)
+        
+        # Connect to Deepgram
+        deepgram_connection = await nova_stt.create_streaming_connection(
+            websocket,
+            handle_assistant_transcription_callback
+        )
+        
+        manager.active_connections[websocket]['deepgram_connection'] = deepgram_connection
+        
+        # Send welcome message
+        await websocket.send_json({
+            "type": "assistant_connected",
+            "message": "Voice assistant ready with TTS and Product Search",
+            "config": {
+                "stt": "deepgram-nova-3",
+                "llm": "gpt-4o-mini",
+                "tts": "elevenlabs",
+                "product_search": "sentence-transformers",
+                "features": ["live_transcription", "llm_responses", "text_to_speech", "product_search"]
+            }
+        })
+        
+        print("✅ Voice assistant connection established")
+        
+        # Start receiving transcriptions from Deepgram
+        receive_task = asyncio.create_task(
+            deepgram_connection['receive_transcriptions']()
+        )
+        
+        # Main loop to receive audio from client and send to Deepgram
+        while True:
+            try:
+                # Check if connection is still alive
+                if websocket.client_state.name != "CONNECTED":
+                    print("⚠️ WebSocket no longer connected, breaking loop")
+                    break
+                
+                # Receive audio with timeout to allow periodic connection checks
+                data = await asyncio.wait_for(
+                    websocket.receive_bytes(),
+                    timeout=30.0  # 30 second timeout
+                )
+                
+                manager.increment_chunks(websocket)
+                
+                # Send audio to Deepgram
+                await deepgram_connection['send_audio'](data)
+                
+                # Small delay to prevent overwhelming the connection
+                await asyncio.sleep(0.01)
+                
+            except asyncio.TimeoutError:
+                # Timeout is normal - just means no data was received
+                # Send a ping to keep connection alive
+                try:
+                    await websocket.send_json({
+                        "type": "ping",
+                        "timestamp": datetime.now().isoformat()
+                    })
+                except:
+                    print("⚠️ Failed to send ping, connection may be dead")
+                    break
+                continue
+                
+            except WebSocketDisconnect:
+                print("🔌 Client disconnected")
+                break
+                
+            except Exception as e:
+                print(f"❌ Error in main loop: {e}")
+                break
+    
+    except WebSocketDisconnect:
+        print("🔌 Voice assistant client disconnected")
+    
+    except Exception as e:
+        print(f"❌ Voice assistant error: {e}")
+        import traceback
+        traceback.print_exc()
+        
+        # Try to send error to client if still connected
+        try:
+            if websocket.client_state.name == "CONNECTED":
+                await websocket.send_json({
+                    "type": "error",
+                    "message": str(e)
+                })
+        except:
+            pass
+    
+    finally:
+        # Cleanup
+        print("🧹 Cleaning up voice assistant connection...")
+        
+        # Cancel receive task if running
+        if receive_task and not receive_task.done():
+            receive_task.cancel()
+            try:
+                await asyncio.wait_for(receive_task, timeout=2.0)
+            except (asyncio.CancelledError, asyncio.TimeoutError):
+                pass
+        
+        # Close Deepgram connection
+        if deepgram_connection:
+            try:
+                await asyncio.wait_for(
+                    deepgram_connection['close'](),
+                    timeout=5.0
+                )
+            except asyncio.TimeoutError:
+                print("⏰ Deepgram close timed out")
+            except Exception as e:
+                print(f"⚠️ Error closing Deepgram: {e}")
+        
+        # Disconnect from manager
+        manager.disconnect(websocket)
+        
+        print("="*80)
+        print("🎯 VOICE ASSISTANT SESSION ENDED")
+        print("="*80 + "\n")
+        
 # ============================================================================
 # REST API ENDPOINTS
 # ============================================================================
@@ -292,7 +514,7 @@ async def handle_assistant_transcription_callback(transcription_data: Dict, clie
 async def root():
     """Root endpoint with system status"""
     return {
-        "message": "Deepgram Nova + Ollama LLM + ElevenLabs TTS + Product Search Voice Assistant",
+        "message": "Deepgram Nova + OpenAI LLM + ElevenLabs TTS + Product Search Voice Assistant",
         "status": "online",
         "version": "4.1.0",
         "features": {
@@ -305,7 +527,7 @@ async def root():
         },
         "models": {
             "stt_model": "nova-3",
-            "llm_model": "gpt-oss-20b",
+            "llm_model": "gpt-4o-mini",
             "tts_model": "eleven_multilingual_v2",
             "embedding_model": "all-MiniLM-L6-v2"
         }
@@ -325,7 +547,7 @@ async def text_to_speech_endpoint(request: TextToSpeechRequest):
         print(f"🔊 TTS request: '{text}'")
         
         # Generate TTS audio
-        audio_data = await tts_engine.text_to_speech(text, play_audio=False)
+        audio_data = await tts_engine.text_to_speech(text, play_audio=False, interrupt_current=True)
         
         if audio_data:
             # Convert to base64 for JSON response
@@ -377,7 +599,8 @@ async def chat_endpoint(request: ChatRequest):
         if include_tts and tts_engine and llm_response.get('success'):
             audio_data = await tts_engine.text_to_speech(
                 llm_response['text'], 
-                play_audio=False
+                play_audio=False,
+                interrupt_current=True
             )
             if audio_data:
                 response_data["audio_data"] = base64.b64encode(audio_data).decode('utf-8')
@@ -507,85 +730,6 @@ async def health_check():
     }
 
 # ============================================================================
-# WEBSOCKET ENDPOINTS
-# ============================================================================
-
-@app.websocket("/ws/voice-assistant")
-async def websocket_voice_assistant(websocket: WebSocket):
-    """
-    WebSocket endpoint for full voice assistant with STT + LLM + TTS + Product Search
-    """
-    await manager.connect(websocket)
-    
-    deepgram_connection = None
-    
-    try:
-        print("\n" + "="*80)
-        print("🎯 VOICE ASSISTANT SESSION STARTED")
-        print("="*80)
-        
-        # Connect to Deepgram
-        deepgram_connection = await nova_stt.create_streaming_connection(
-            websocket,
-            handle_assistant_transcription_callback
-        )
-        
-        manager.active_connections[websocket]['deepgram_connection'] = deepgram_connection
-        
-        # Send welcome message
-        await websocket.send_json({
-            "type": "assistant_connected",
-            "message": "Voice assistant ready with TTS and Product Search",
-            "config": {
-                "stt": "deepgram-nova-3",
-                "llm": "gpt-oss-20b",
-                "tts": "elevenlabs",
-                "product_search": "sentence-transformers",
-                "features": ["live_transcription", "llm_responses", "text_to_speech", "product_search"]
-            }
-        })
-        
-        print("✅ Voice assistant connection established")
-        
-        # Start receiving transcriptions from Deepgram
-        receive_task = asyncio.create_task(
-            deepgram_connection['receive_transcriptions']()
-        )
-        
-        # Main loop to receive audio from client and send to Deepgram
-        while True:
-            data = await websocket.receive_bytes()
-            manager.increment_chunks(websocket)
-            
-            # Send audio to Deepgram
-            await deepgram_connection['send_audio'](data)
-            
-            # Small delay to prevent overwhelming the connection
-            await asyncio.sleep(0.01)
-    
-    except WebSocketDisconnect:
-        print("Voice assistant client disconnected")
-    
-    except Exception as e:
-        print(f"✗ Voice assistant error: {e}")
-        try:
-            await websocket.send_json({
-                "type": "error",
-                "message": str(e)
-            })
-        except:
-            pass
-    
-    finally:
-        # Cleanup
-        if deepgram_connection:
-            await deepgram_connection['close']()
-        manager.disconnect(websocket)
-        print("="*80)
-        print("🎯 VOICE ASSISTANT SESSION ENDED")
-        print("="*80 + "\n")
-
-# ============================================================================
 # STARTUP EVENT
 # ============================================================================
 
@@ -602,3 +746,18 @@ async def startup_event():
     print(f"🔊 TTS Status: {'✅ Enabled' if tts_engine else '❌ Disabled'}")
     print(f"🔍 Product Search: {'✅ Enabled' if product_search else '❌ Disabled'}")
     print("="*80 + "\n")
+
+# shudown event
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on application shutdown"""
+    print("🧹 Shutting down services...")
+    
+    if tts_engine:
+        # Synchronous cleanup for TTS
+        try:
+            await asyncio.get_event_loop().run_in_executor(None, tts_engine.cleanup)
+        except Exception as e:
+            print(f"⚠️ Error during TTS cleanup: {e}")
+    
+    print("✅ Services shut down successfully")

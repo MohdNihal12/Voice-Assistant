@@ -9,7 +9,7 @@ import numpy as np
 
 class DeepgramNovaSTT:
     """
-    Deepgram Nova 2 Speech-to-Text with live streaming capabilities
+    Deepgram Nova 3 Speech-to-Text with live streaming capabilities
     """
     
     def __init__(
@@ -69,13 +69,13 @@ class DeepgramNovaSTT:
             try:
                 # UPDATED Deepgram parameters for multilingual support
                 params = {
-                    'model': self.model,
+                    'model': self.model,    
                     'encoding': 'linear16',
                     'sample_rate': str(self.sample_rate),
                     'channels': '1',
                     'interim_results': 'true',
                     'punctuate': 'true',
-                    'utterance_end_ms': '1000',
+                    'utterance_end_ms': '2000',
                     'endpointing': '100',  # CORRECTED: 100ms for code-switching as recommended
                 }
                 
