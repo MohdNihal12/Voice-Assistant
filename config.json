@@ -1,0 +1,49 @@
+{
+  "server": {
+    "port": 8004,
+    "host": "0.0.0.0",
+    "cors_origins": ["*"]
+  },
+  "deepgram": {
+    "model": "nova-3",
+    "sample_rate": 16000,
+    "language": null,
+    "enable_multilingual": true,
+    "verbose": false,
+    "chunk_size": 1024,
+    "endpointing": 100,
+    "utterance_end_ms": 3000
+  },
+  "llm": {
+    "model": "gpt-4o-mini",
+    "timeout": 15,
+    "max_tokens": 2400,
+    "temperature": 1
+  },
+  "tts": {
+    "voice_id": "iP95p4xoKVk53GoZ742B",
+    "model_id": "eleven_multilingual_v2",
+    "output_format": "mp3_44100_128",
+    "timeout": 15
+  },
+  "product_search": {
+    "product_file": "data/product.json",
+    "top_k": 3,
+    "similarity_threshold": 0.3
+  },
+  "database": {
+    "enabled": true,
+    "max_connections": 10
+  },
+  "websocket": {
+    "ping_interval": 30,
+    "receive_timeout": 30,
+    "audio_chunk_delay": 0.01
+  },
+  "features": {
+    "enable_tts": true,
+    "enable_product_search": true,
+    "enable_database": false,
+    "enable_multilingual": true
+  }
+}

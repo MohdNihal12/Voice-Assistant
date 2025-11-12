@@ -8,6 +8,9 @@ import logging
 from openai import AsyncOpenAI
 from typing import TYPE_CHECKING
 
+# NEW: Import config manager
+from app.config_manager import config_manager
+
 if TYPE_CHECKING:
     from database import CustomerDatabase
 
@@ -22,20 +25,26 @@ class RemoteGPTLLM:
     def __init__(
         self, 
         api_key: Optional[str] = None,
-        model: str = "gpt-4o-mini",
-        timeout: int = 30,
-        max_conversation_turns: int = 10,
+        model: str = None,  # UPDATED: Use config by default
+        timeout: int = None,  # UPDATED: Use config by default
+        max_conversation_turns: int = 20,  # Increased for better context
         system_prompt: Optional[str] = None,
         product_search: Optional[Any] = None,
-        customer_db : Optional['CustomerDatabase']=None
+        customer_db: Optional['CustomerDatabase'] = None
     ):
+        # Get config values
+        config = config_manager.get_config()
+        
         # Get API key from parameter or environment variable
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
         if not self.api_key:
             raise ValueError("OpenAI API key is required. Set OPENAI_API_KEY environment variable or pass api_key parameter.")
         
-        self.model = model
-        self.timeout = timeout
+        # UPDATED: Use config values with fallbacks
+        self.model = model or config.llm.model
+        self.timeout = timeout or config.llm.timeout
+        self.max_tokens = config.llm.max_tokens
+        self.temperature = config.llm.temperature
         self.max_conversation_turns = max_conversation_turns
         self.conversation_history = []
         self.product_search = product_search
@@ -43,13 +52,12 @@ class RemoteGPTLLM:
         # Initialize OpenAI client
         self.client = AsyncOpenAI(
             api_key=self.api_key,
-            timeout=timeout,
+            timeout=self.timeout,
             max_retries=2
         )
 
-        
-        # Enhanced RAG-optimized system prompt
-        self.system_prompt = """
+        # UPDATED: Enhanced RAG-optimized system prompt with configurable elements
+        self.system_prompt = system_prompt or f"""
 # WHO YOU ARE
 You're Alex, a friendly sales assistant at Hidayath Group. You've been helping customers with steel and aluminum for years, so you know your stuff but you're not a robot about it. You're genuinely here to help people find what they need.
 
@@ -206,7 +214,7 @@ NOT:
 - Suggest alternatives based on what you DO know
 
 # REMEMBER
-You're having a conversation, not filling out a form or reading a catalog. Be helpful, be real, be Ari. Think: "How would I explain this to a friend who needs my help buying metal?"
+You're having a conversation, not filling out a form or reading a catalog. Be helpful, be real, be Alex. Think: "How would I explain this to a friend who needs my help buying metal?"
 
 Less like: "I am pleased to inform you that we have inventory available"
 More like: "Yeah, we've got that!"
@@ -218,7 +226,6 @@ Less like: "The product specifications are as follows"
 More like: "So it's 2mm thick, comes in sheets..."
 
 Stay natural, stay helpful, stay human.
-
 
 # QUOTATION Conversation flow
 
@@ -245,12 +252,13 @@ Stay natural, stay helpful, stay human.
 - Explain why you need the info
 - Confirm details to ensure accuracy
 - Continue the conversation naturally after collecting info
+
+# CONFIGURATION NOTES
+- Response temperature: {self.temperature}
+- Max response length: {self.max_tokens} tokens
+- Model: {self.model}
+- Timeout: {self.timeout} seconds
 """
-
-
-
-
-
 
         # Statistics
         self.stats = {
@@ -267,11 +275,11 @@ Stay natural, stay helpful, stay human.
         logger.info(f"🚀 OpenAI LLM initialized:")
         logger.info(f"   Model: {self.model}")
         logger.info(f"   Timeout: {self.timeout}s")
+        logger.info(f"   Max tokens: {self.max_tokens}")
+        logger.info(f"   Temperature: {self.temperature}")
         logger.info(f"   Max history: {self.max_conversation_turns} turns")
         logger.info(f"   Product Search: {'Enabled' if product_search else 'Disabled'}")
-        
-
-    
+        logger.info(f"   Config Source: config.json")
     
     async def _search_relevant_products(self, user_message: str) -> Optional[str]:
         """
@@ -283,6 +291,9 @@ Stay natural, stay helpful, stay human.
             return None
         
         try:
+            # Get config for product search settings
+            config = config_manager.get_config()
+            
             # Determine if this is a product-related query
             product_keywords = [
                 'aluminum', 'steel', 'stainless', 'sheet', 'plate', 'metal',
@@ -302,12 +313,12 @@ Stay natural, stay helpful, stay human.
                 logger.info(f"🔍 Not a product query: '{user_message}'")
                 return None
             
-            # Search for relevant products
+            # Search for relevant products using config values
             logger.info(f"🔍 Searching products for: '{user_message}'")
             relevant_products = await self.product_search.search_products(
                 user_message, 
-                top_k=5, 
-                similarity_threshold=0.3
+                top_k=config.product_search.top_k,  # UPDATED: Use config
+                similarity_threshold=config.product_search.similarity_threshold  # UPDATED: Use config
             )
             
             logger.info(f"📦 Found {len(relevant_products)} relevant products")
@@ -443,7 +454,7 @@ No specific product matches found for the query. Consider asking clarifying ques
         # Improved product extraction
         product_keywords = {
             'aluminum': ['aluminum', 'aluminium', 'al sheet', 'al plate'],
-            'steel': ['steel', 'stainless steel', 'ss', 'stainless'],
+            'stainless steel': ['steel', 'stainless steel', 'ss', 'stainless'],
             'sheet': ['sheet', 'sheets'],
             'plate': ['plate', 'plates'],
             'pipe': ['pipe', 'pipes', 'tube', 'tubes'],
@@ -460,8 +471,6 @@ No specific product matches found for the query. Consider asking clarifying ques
         logger.info(f"🔍 Extracted info - Name: {customer_name}, Email: {customer_email}, Product: {product_requested}")
         
         return customer_name, customer_email, product_requested
-
-
 
     async def generate_response(self, user_message: str) -> Dict[str, Any]:
         """Generate a response for the user message using OpenAI API"""
@@ -480,12 +489,12 @@ No specific product matches found for the query. Consider asking clarifying ques
             
             logger.info(f"💬 Sending request to OpenAI: '{user_message}'")
             
-            # Make request to OpenAI API
+            # Make request to OpenAI API with config values
             response = await self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
-                max_tokens=500,
-                temperature=0.7,
+                max_tokens=self.max_tokens,  # UPDATED: Use config
+                temperature=self.temperature,  # UPDATED: Use config
                 timeout=self.timeout
             )
             
@@ -503,7 +512,9 @@ No specific product matches found for the query. Consider asking clarifying ques
             self.stats['total_processing_time'] += processing_time
 
             # STORE IN DATABASE - WITH PROPER ERROR HANDLING
-            if self.customer_db and self.customer_db.is_connected:
+            config = config_manager.get_config()
+            if (self.customer_db and self.customer_db.is_connected and 
+                config.features.enable_database):  # UPDATED: Check config
                 try:
                     customer_name, customer_email, product_requested = self._extract_basic_info(user_message)
                     await self.customer_db.store_customer_query(
@@ -516,7 +527,7 @@ No specific product matches found for the query. Consider asking clarifying ques
                 except Exception as db_error:
                     logger.error(f"❌ Failed to store in database: {db_error}")
             else:
-                logger.warning("⚠️ Database not available - skipping storage")
+                logger.warning("⚠️ Database not available or disabled - skipping storage")
             
             logger.info(f"🤖 OpenAI Response: '{response_text}'")
             logger.info(f"⏱️  Processing time: {processing_time:.2f}s")
@@ -530,14 +541,14 @@ No specific product matches found for the query. Consider asking clarifying ques
                 'conversation_turns': len(self.conversation_history) // 2,
                 'products_used_in_context': self.stats['products_found_in_context'],
                 'product_search_performed': self.stats['product_searches_performed'] > 0,
-                'database_stored': self.customer_db and self.customer_db.is_connected,
+                'database_stored': (self.customer_db and self.customer_db.is_connected and 
+                                  config.features.enable_database),
                 'openai_usage': {
                     'total_tokens': response.usage.total_tokens,
                     'prompt_tokens': response.usage.prompt_tokens,
                     'completion_tokens': response.usage.completion_tokens
                 } if hasattr(response, 'usage') and response.usage else None
             }
-            
             
         except asyncio.TimeoutError:
             logger.error("⏰ Request to OpenAI API timed out")
@@ -639,7 +650,11 @@ No specific product matches found for the query. Consider asking clarifying ques
             'product_search_rate': f"{product_search_rate:.1f}%",
             'average_processing_time': f"{avg_processing_time:.2f}s",
             'model': self.model,
-            'provider': 'OpenAI'
+            'temperature': self.temperature,
+            'max_tokens': self.max_tokens,
+            'timeout': self.timeout,
+            'provider': 'OpenAI',
+            'config_source': 'config.json'
         }
     
     async def close(self):
@@ -720,7 +735,6 @@ async def main():
     # Initialize LLM with product search
     llm = RemoteGPTLLM(
         api_key=os.getenv("OPENAI_API_KEY"),
-        model="gpt-4o-mini",
         product_search=product_search
     )
     

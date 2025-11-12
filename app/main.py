@@ -16,13 +16,17 @@ from app.llm import RemoteGPTLLM
 from app.tts import ElevenLabsTTS
 from app.productsearch import ProductSearch
 from app.database import customer_db, CustomerDatabase
+from app.config_manager import config_manager  # NEW: Import config manager
 
 # ============================================================================
-# LOAD ENVIRONMENT VARIABLES
+# LOAD ENVIRONMENT VARIABLES AND CONFIG
 # ============================================================================
 
 # Load .env file
 load_dotenv()
+
+# Load configuration
+config = config_manager.get_config()
 
 # Debug: Check if API keys are loaded
 deepgram_api_key = os.getenv("DEEPGRAM_API_KEY")
@@ -30,6 +34,7 @@ elevenlabs_api_key = os.getenv("ELEVENLABS_API_KEY")
 
 print(f"🔑 Deepgram API Key loaded: {'Yes' if deepgram_api_key else 'No'}")
 print(f"🔑 ElevenLabs API Key loaded: {'Yes' if elevenlabs_api_key else 'No'}")
+print(f"⚙️ Configuration loaded from config.json")
 
 # ============================================================================
 # PYDANTIC MODELS
@@ -44,7 +49,7 @@ class ChatRequest(BaseModel):
 
 class ProductSearchRequest(BaseModel):
     query: str
-    top_k: int = 3
+    top_k: int = config.product_search.top_k  # Use config value
 
 # ============================================================================
 # FASTAPI APP INITIALIZATION
@@ -56,10 +61,10 @@ app = FastAPI(
     version="4.1.0"
 )
 
-# Enable CORS
+# Enable CORS from config
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=config.server.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -85,46 +90,62 @@ product_search = None
 customer_db = None
 
 async def initialize_services():
-    """Initialize all services"""
+    """Initialize all services using configuration"""
     global nova_stt, tts_engine, RemoteGPT, product_search, customer_db
     
     try:
-        print("🗄️ Initializing Database...")
-        customer_db = CustomerDatabase()
-        db_success = await customer_db.initialize()
-        if db_success:
-            print("✅ Database initialized successfully")
+        # Initialize Database if enabled
+        if config.features.enable_database:
+            print("🗄️ Initializing Database...")
+            customer_db = CustomerDatabase()
+            db_success = await customer_db.initialize()
+            if db_success:
+                print("✅ Database initialized successfully")
+            else:
+                print("⚠️ Database initialization failed - continuing without database")
         else:
-            print("⚠️ Database initialization failed - continuing without database")
-        # Initialize Product Search
-        print("🔍 Initializing Product Search...")
-        product_search = ProductSearch(product_file="data/product.json")
-        await product_search.initialize()
-        print("✅ Product Search initialized successfully")
+            print("⏭️ Database disabled in config")
+            customer_db = None
+        
+        # Initialize Product Search if enabled
+        if config.features.enable_product_search:
+            print("🔍 Initializing Product Search...")
+            product_search = ProductSearch(
+                product_file=config.product_search.product_file
+            )
+            await product_search.initialize()
+            print("✅ Product Search initialized successfully")
+        else:
+            print("⏭️ Product Search disabled in config")
+            product_search = None
         
         # Initialize Deepgram Nova STT
         print("📝 Initializing Deepgram Nova...")
         nova_stt = DeepgramNovaSTT(
             api_key=os.getenv("DEEPGRAM_API_KEY"),
-            sample_rate=16000,
-            language=None,  # Auto-detect
-            model="nova-3",
-            verbose=False,
-            enable_multilingual=True, 
+            sample_rate=config.deepgram.sample_rate,
+            language=config.deepgram.language,
+            model=config.deepgram.model,
+            verbose=config.deepgram.verbose,
+            enable_multilingual=config.deepgram.enable_multilingual, 
         )
         print("✅ Deepgram Nova initialized successfully")
         
-        # Initialize ElevenLabs TTS
-        print("🔊 Initializing ElevenLabs TTS...")
-        try:
-            tts_engine = ElevenLabsTTS(
-                voice_id="iP95p4xoKVk53GoZ742B",
-                model_id="eleven_multilingual_v2",
-                output_format="mp3_44100_128"
-            )
-            print("✅ ElevenLabs TTS initialized successfully")
-        except Exception as e:
-            print(f"❌ Failed to initialize ElevenLabs TTS: {e}")
+        # Initialize ElevenLabs TTS if enabled
+        if config.features.enable_tts:
+            print("🔊 Initializing ElevenLabs TTS...")
+            try:
+                tts_engine = ElevenLabsTTS(
+                    voice_id=config.tts.voice_id,
+                    model_id=config.tts.model_id,
+                    output_format=config.tts.output_format
+                )
+                print("✅ ElevenLabs TTS initialized successfully")
+            except Exception as e:
+                print(f"❌ Failed to initialize ElevenLabs TTS: {e}")
+                tts_engine = None
+        else:
+            print("⏭️ TTS disabled in config")
             tts_engine = None
         
         # Initialize Remote GPT LLM with Product Search
@@ -132,7 +153,7 @@ async def initialize_services():
         try:
             RemoteGPT = RemoteGPTLLM(
                 api_key=os.getenv("OPENAI_API_KEY"),
-                model="gpt-4o-mini",  # or "gpt-4" if you have access
+                model=config.llm.model,
                 product_search=product_search,
                 customer_db=customer_db
             )
@@ -233,7 +254,7 @@ async def handle_assistant_transcription_callback(transcription_data: Dict, clie
                 print("🧠 Generating AI response with product search...")
                 
                 # ROBUST TTS INTERRUPTION - Stop immediately and wait for completion
-                if tts_engine:
+                if tts_engine and config.features.enable_tts:
                     print("🛑 FORCE STOPPING ALL TTS PLAYBACK FOR NEW QUESTION")
                     # Use synchronous stop with timeout
                     try:
@@ -251,10 +272,10 @@ async def handle_assistant_transcription_callback(transcription_data: Dict, clie
                         print(f"⚠️ Error stopping TTS: {e}")
                 
                 try:
-                    # Generate LLM response with timeout
+                    # Generate LLM response with timeout from config
                     llm_response = await asyncio.wait_for(
                         RemoteGPT.generate_response(final_text),
-                        timeout=15.0
+                        timeout=config.llm.timeout
                     )
                     
                     # Check websocket state before sending response
@@ -281,7 +302,7 @@ async def handle_assistant_transcription_callback(transcription_data: Dict, clie
                         return
                     
                     # Generate TTS audio if TTS is available and response is successful
-                    if tts_engine and llm_response.get('success'):
+                    if tts_engine and llm_response.get('success') and config.features.enable_tts:
                         print("🔊 Generating TTS audio with interruption...")
                         
                         # Run TTS generation in background
@@ -341,7 +362,7 @@ async def generate_and_send_tts_with_interrupt(text: str, client_websocket: WebS
         try:
             audio_data = await asyncio.wait_for(
                 tts_engine.text_to_speech(text, play_audio=False, interrupt_current=True),
-                timeout=10.0
+                timeout=config.tts.timeout
             )
         except asyncio.TimeoutError:
             print("⏰ TTS generation timed out")
@@ -410,10 +431,11 @@ async def websocket_voice_assistant(websocket: WebSocket):
             "type": "assistant_connected",
             "message": "Voice assistant ready with TTS and Product Search",
             "config": {
-                "stt": "deepgram-nova-3",
-                "llm": "gpt-4o-mini",
-                "tts": "elevenlabs",
-                "product_search": "sentence-transformers",
+                "stt": config.deepgram.model,
+                "llm": config.llm.model,
+                "tts": config.tts.model_id if config.features.enable_tts else "disabled",
+                "product_search": "enabled" if config.features.enable_product_search else "disabled",
+                "multilingual": config.features.enable_multilingual,
                 "features": ["live_transcription", "llm_responses", "text_to_speech", "product_search"]
             }
         })
@@ -433,10 +455,10 @@ async def websocket_voice_assistant(websocket: WebSocket):
                     print("⚠️ WebSocket no longer connected, breaking loop")
                     break
                 
-                # Receive audio with timeout to allow periodic connection checks
+                # Receive audio with timeout from config
                 data = await asyncio.wait_for(
                     websocket.receive_bytes(),
-                    timeout=30.0  # 30 second timeout
+                    timeout=config.websocket.receive_timeout
                 )
                 
                 manager.increment_chunks(websocket)
@@ -444,8 +466,8 @@ async def websocket_voice_assistant(websocket: WebSocket):
                 # Send audio to Deepgram
                 await deepgram_connection['send_audio'](data)
                 
-                # Small delay to prevent overwhelming the connection
-                await asyncio.sleep(0.01)
+                # Small delay from config to prevent overwhelming the connection
+                await asyncio.sleep(config.websocket.audio_chunk_delay)
                 
             except asyncio.TimeoutError:
                 # Timeout is normal - just means no data was received
@@ -528,18 +550,20 @@ async def root():
         "message": "Deepgram Nova + OpenAI LLM + ElevenLabs TTS + Product Search Voice Assistant",
         "status": "online",
         "version": "4.1.0",
+        "config_source": "config.json",
         "features": {
             "deepgram_nova": True,
             "RemoteGPT": True,
-            "elevenlabs_tts": tts_engine is not None,
-            "product_search": product_search is not None,
+            "elevenlabs_tts": tts_engine is not None and config.features.enable_tts,
+            "product_search": product_search is not None and config.features.enable_product_search,
             "live_streaming": True,
-            "text_to_speech": True
+            "text_to_speech": config.features.enable_tts,
+            "multilingual": config.features.enable_multilingual
         },
         "models": {
-            "stt_model": "nova-3",
-            "llm_model": "gpt-4o-mini",
-            "tts_model": "eleven_multilingual_v2",
+            "stt_model": config.deepgram.model,
+            "llm_model": config.llm.model,
+            "tts_model": config.tts.model_id if config.features.enable_tts else "disabled",
             "embedding_model": "all-MiniLM-L6-v2"
         }
     }
@@ -552,7 +576,7 @@ async def text_to_speech_endpoint(request: TextToSpeechRequest):
         if not text:
             raise HTTPException(status_code=400, detail="Text cannot be empty")
         
-        if not tts_engine:
+        if not tts_engine or not config.features.enable_tts:
             raise HTTPException(status_code=500, detail="TTS engine not available")
         
         print(f"🔊 TTS request: '{text}'")
@@ -568,7 +592,7 @@ async def text_to_speech_endpoint(request: TextToSpeechRequest):
                 "status": "success",
                 "text": text,
                 "audio_data": audio_base64,
-                "audio_format": "mp3_44100_128",
+                "audio_format": config.tts.output_format,
                 "timestamp": datetime.now().isoformat()
             }
         else:
@@ -593,7 +617,7 @@ async def chat_endpoint(request: ChatRequest):
         # Generate LLM response
         llm_response = await asyncio.wait_for(
             RemoteGPT.generate_response(user_message),
-            timeout=15.0
+            timeout=config.llm.timeout
         )
         
         response_data = {
@@ -607,7 +631,7 @@ async def chat_endpoint(request: ChatRequest):
         }
         
         # Include TTS if requested and available
-        if include_tts and tts_engine and llm_response.get('success'):
+        if include_tts and tts_engine and llm_response.get('success') and config.features.enable_tts:
             audio_data = await tts_engine.text_to_speech(
                 llm_response['text'], 
                 play_audio=False,
@@ -627,7 +651,7 @@ async def chat_endpoint(request: ChatRequest):
 async def search_products_endpoint(request: ProductSearchRequest):
     """Search products using semantic similarity"""
     try:
-        if not product_search:
+        if not product_search or not config.features.enable_product_search:
             raise HTTPException(status_code=500, detail="Product search not available")
         
         query = request.query.strip()
@@ -657,7 +681,7 @@ async def search_products_endpoint(request: ProductSearchRequest):
 async def get_all_products():
     """Get all products"""
     try:
-        if not product_search:
+        if not product_search or not config.features.enable_product_search:
             raise HTTPException(status_code=500, detail="Product search not available")
         
         return {
@@ -674,7 +698,7 @@ async def get_all_products():
 async def get_product_by_id(product_id: str):
     """Get product by ID"""
     try:
-        if not product_search:
+        if not product_search or not config.features.enable_product_search:
             raise HTTPException(status_code=500, detail="Product search not available")
         
         product = await product_search.get_product_by_id(product_id)
@@ -695,7 +719,7 @@ async def get_product_by_id(product_id: str):
 @app.get("/tts-voices")
 async def get_tts_voices():
     """Get available TTS voices and configuration"""
-    if not tts_engine:
+    if not tts_engine or not config.features.enable_tts:
         return {"status": "error", "message": "TTS not available"}
     
     voice_info = tts_engine.get_voice_info()
@@ -708,7 +732,7 @@ async def get_tts_voices():
 @app.get("/search-stats")
 async def get_search_stats():
     """Get product search statistics"""
-    if not product_search:
+    if not product_search or not config.features.enable_product_search:
         return {"status": "error", "message": "Product search not available"}
     
     return {
@@ -730,8 +754,8 @@ async def get_llm_stats():
 @app.get("/debug/database")
 async def debug_database():
     """Debug database connection"""
-    if not customer_db:
-        return {"status": "error", "message": "Customer DB not initialized"}
+    if not customer_db or not config.features.enable_database:
+        return {"status": "error", "message": "Customer DB not initialized or disabled"}
     
     return {
         "database_initialized": customer_db.is_connected,
@@ -742,8 +766,8 @@ async def debug_database():
 @app.get("/debug/queries")
 async def debug_queries():
     """Get recent queries from database"""
-    if not customer_db or not customer_db.is_connected:
-        return {"status": "error", "message": "Database not connected"}
+    if not customer_db or not customer_db.is_connected or not config.features.enable_database:
+        return {"status": "error", "message": "Database not connected or disabled"}
     
     try:
         async with customer_db.connection_pool.acquire() as conn:
@@ -768,6 +792,35 @@ async def debug_queries():
     except Exception as e:
         return {"status": "error", "message": f"Database error: {str(e)}"}
 
+@app.get("/config")
+async def get_current_config():
+    """Get current configuration"""
+    return {
+        "status": "success",
+        "config": config.dict(),
+        "config_file": config_manager.config_file,
+        "timestamp": datetime.now().isoformat()
+    }
+
+@app.post("/config/update")
+async def update_config(new_config: Dict):
+    """Update configuration (partial updates supported)"""
+    try:
+        success = config_manager.update_config(new_config)
+        if success:
+            # Reload configuration
+            global config
+            config = config_manager.get_config()
+            return {
+                "status": "success",
+                "message": "Configuration updated successfully",
+                "config": config.dict()
+            }
+        else:
+            raise HTTPException(status_code=500, detail="Failed to update configuration")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid configuration: {str(e)}")
+
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
@@ -775,9 +828,10 @@ async def health_check():
         "status": "healthy",
         "deepgram_configured": bool(nova_stt and nova_stt.api_key),
         "ollama_configured": hasattr(RemoteGPT, 'generate_response'),
-        "tts_configured": tts_engine is not None,
-        "product_search_configured": product_search is not None,
+        "tts_configured": tts_engine is not None and config.features.enable_tts,
+        "product_search_configured": product_search is not None and config.features.enable_product_search,
         "active_connections": len(manager.active_connections),
+        "config_loaded": config is not None,
         "timestamp": datetime.now().isoformat()
     }
 
@@ -793,19 +847,20 @@ async def startup_event():
     print("\n" + "="*80)
     print("🚀 VOICE ASSISTANT SERVER STARTED SUCCESSFULLY")
     print("="*80)
-    print(f"📡 Server running at: http://localhost:8004")
-    print(f"📚 API Documentation: http://localhost:8004/docs")
-    print(f"🔊 TTS Status: {'✅ Enabled' if tts_engine else '❌ Disabled'}")
-    print(f"🔍 Product Search: {'✅ Enabled' if product_search else '❌ Disabled'}")
+    print(f"📡 Server running at: http://{config.server.host}:{config.server.port}")
+    print(f"📚 API Documentation: http://{config.server.host}:{config.server.port}/docs")
+    print(f"🔊 TTS Status: {'✅ Enabled' if tts_engine and config.features.enable_tts else '❌ Disabled'}")
+    print(f"🔍 Product Search: {'✅ Enabled' if product_search and config.features.enable_product_search else '❌ Disabled'}")
+    print(f"🌍 Multilingual: {'✅ Enabled' if config.features.enable_multilingual else '❌ Disabled'}")
+    print(f"🗄️ Database: {'✅ Enabled' if config.features.enable_database else '❌ Disabled'}")
     print("="*80 + "\n")
 
-# shudown event
 @app.on_event("shutdown")
 async def shutdown_event():
     """Cleanup on application shutdown"""
     print("🧹 Shutting down services...")
     
-    if tts_engine:
+    if tts_engine and config.features.enable_tts:
         # Synchronous cleanup for TTS
         try:
             await asyncio.get_event_loop().run_in_executor(None, tts_engine.cleanup)

@@ -6,6 +6,7 @@ import aiohttp
 from datetime import datetime
 import numpy as np
 
+from app.config_manager import config_manager  # NEW: Import config
 
 class DeepgramNovaSTT:
     """
@@ -15,28 +16,31 @@ class DeepgramNovaSTT:
     def __init__(
         self,
         api_key: str,
-        sample_rate: int = 16000,
-        language: Optional[str] = None,
-        model: str = "nova-3",
+        sample_rate: int = None,  # UPDATED: Use config by default
+        language: Optional[str] = None,  # UPDATED: Use config by default
+        model: str = None,  # UPDATED: Use config by default
         endpoint: str = "wss://api.deepgram.com/v1/listen",
-        verbose: bool = False,
-        enable_multilingual: bool = True  # NEW: Add multilingual support
+        verbose: bool = None,  # UPDATED: Use config by default
+        enable_multilingual: bool = None  # UPDATED: Use config by default
     ):
+        # Get config values
+        config = config_manager.get_config()
+        
         self.api_key = api_key
-        self.sample_rate = sample_rate
-        self.language = language
-        self.model = model
+        self.sample_rate = sample_rate or config.deepgram.sample_rate  # UPDATED
+        self.language = language if language is not None else config.deepgram.language  # UPDATED
+        self.model = model or config.deepgram.model  # UPDATED
         self.endpoint = endpoint
-        self.verbose = verbose
-        self.enable_multilingual = enable_multilingual  # NEW
+        self.verbose = verbose if verbose is not None else config.deepgram.verbose  # UPDATED
+        self.enable_multilingual = enable_multilingual if enable_multilingual is not None else config.deepgram.enable_multilingual  # UPDATED
         
         # Connection state management
         self._connection_lock = asyncio.Lock()
         self._is_connected = False
         self._current_connection = None
         
-        # Audio streaming settings
-        self.chunk_size = 1024  # Optimal chunk size for Deepgram
+        # Audio streaming settings from config
+        self.chunk_size = config.deepgram.chunk_size  # UPDATED
         self.sample_width = 2   # 16-bit audio
         
         # Background task for receiving
@@ -56,7 +60,8 @@ class DeepgramNovaSTT:
         print(f"   Model: {self.model}")
         print(f"   Sample Rate: {self.sample_rate}Hz")
         print(f"   Language: {self.language or 'auto-detect'}")
-        print(f"   Multilingual: {self.enable_multilingual}")  # NEW
+        print(f"   Multilingual: {self.enable_multilingual}")
+        print(f"   Config Source: config.json")  # NEW
     
     async def create_streaming_connection(self, websocket, callback: Callable):
         """Create a live streaming connection to Deepgram Nova"""
@@ -67,7 +72,9 @@ class DeepgramNovaSTT:
                 return self._current_connection
             
             try:
-                # UPDATED Deepgram parameters for multilingual support
+                # UPDATED: Use config values for Deepgram parameters
+                config = config_manager.get_config()
+                
                 params = {
                     'model': self.model,    
                     'encoding': 'linear16',
@@ -75,11 +82,11 @@ class DeepgramNovaSTT:
                     'channels': '1',
                     'interim_results': 'true',
                     'punctuate': 'true',
-                    'utterance_end_ms': '3000',
-                    'endpointing': '100',  # CORRECTED: 100ms for code-switching as recommended
+                    'utterance_end_ms': str(config.deepgram.utterance_end_ms),  # UPDATED
+                    'endpointing': str(config.deepgram.endpointing),  # UPDATED
                 }
                 
-                # UPDATED Language configuration
+                # UPDATED Language configuration using config
                 if self.enable_multilingual:
                     # Enable multilingual/code-switching mode
                     params['language'] = 'multi'  # Use 'multi' for multilingual
