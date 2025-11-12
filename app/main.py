@@ -15,6 +15,7 @@ from app.nova import DeepgramNovaSTT
 from app.llm import RemoteGPTLLM
 from app.tts import ElevenLabsTTS
 from app.productsearch import ProductSearch
+from app.database import customer_db, CustomerDatabase
 
 # ============================================================================
 # LOAD ENVIRONMENT VARIABLES
@@ -81,12 +82,20 @@ nova_stt = None
 tts_engine = None
 RemoteGPT = None
 product_search = None
+customer_db = None
 
 async def initialize_services():
     """Initialize all services"""
-    global nova_stt, tts_engine, RemoteGPT, product_search
+    global nova_stt, tts_engine, RemoteGPT, product_search, customer_db
     
     try:
+        print("🗄️ Initializing Database...")
+        customer_db = CustomerDatabase()
+        db_success = await customer_db.initialize()
+        if db_success:
+            print("✅ Database initialized successfully")
+        else:
+            print("⚠️ Database initialization failed - continuing without database")
         # Initialize Product Search
         print("🔍 Initializing Product Search...")
         product_search = ProductSearch(product_file="data/product.json")
@@ -124,11 +133,13 @@ async def initialize_services():
             RemoteGPT = RemoteGPTLLM(
                 api_key=os.getenv("OPENAI_API_KEY"),
                 model="gpt-4o-mini",  # or "gpt-4" if you have access
-                product_search=product_search
+                product_search=product_search,
+                customer_db=customer_db
             )
             print("✅ OpenAI LLM with Product Search initialized successfully")
         except Exception as e:
             print(f"❌ Failed to initialize OpenAI LLM: {e}")
+            
             # Fallback to a simple LLM
             class FallbackLLM:
                 async def generate_response(self, text):
@@ -715,6 +726,47 @@ async def get_llm_stats():
         "status": "success",
         "llm_stats": RemoteGPT.get_system_stats()
     }
+
+@app.get("/debug/database")
+async def debug_database():
+    """Debug database connection"""
+    if not customer_db:
+        return {"status": "error", "message": "Customer DB not initialized"}
+    
+    return {
+        "database_initialized": customer_db.is_connected,
+        "database_url": customer_db.database_url if customer_db.database_url else "Not set",
+        "llm_has_database": hasattr(RemoteGPT, 'customer_db') and RemoteGPT.customer_db is not None
+    }
+
+@app.get("/debug/queries")
+async def debug_queries():
+    """Get recent queries from database"""
+    if not customer_db or not customer_db.is_connected:
+        return {"status": "error", "message": "Database not connected"}
+    
+    try:
+        async with customer_db.connection_pool.acquire() as conn:
+            rows = await conn.fetch('''
+                SELECT query_id, customer_name, customer_email, product_requested, 
+                       full_query_text, timestamp 
+                FROM customer_queries 
+                ORDER BY timestamp DESC 
+                LIMIT 10
+            ''')
+            
+            queries = []
+            for row in rows:
+                queries.append(dict(row))
+            
+            return {
+                "status": "success",
+                "total_queries": len(queries),
+                "queries": queries
+            }
+            
+    except Exception as e:
+        return {"status": "error", "message": f"Database error: {str(e)}"}
 
 @app.get("/health")
 async def health_check():

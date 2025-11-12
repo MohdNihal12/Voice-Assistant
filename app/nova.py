@@ -75,7 +75,7 @@ class DeepgramNovaSTT:
                     'channels': '1',
                     'interim_results': 'true',
                     'punctuate': 'true',
-                    'utterance_end_ms': '2000',
+                    'utterance_end_ms': '3000',
                     'endpointing': '100',  # CORRECTED: 100ms for code-switching as recommended
                 }
                 

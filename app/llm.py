@@ -6,6 +6,10 @@ from datetime import datetime
 from typing import Dict, Any, Optional, List
 import logging
 from openai import AsyncOpenAI
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from database import CustomerDatabase
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -22,7 +26,8 @@ class RemoteGPTLLM:
         timeout: int = 30,
         max_conversation_turns: int = 10,
         system_prompt: Optional[str] = None,
-        product_search: Optional[Any] = None
+        product_search: Optional[Any] = None,
+        customer_db : Optional['CustomerDatabase']=None
     ):
         # Get API key from parameter or environment variable
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
@@ -41,6 +46,7 @@ class RemoteGPTLLM:
             timeout=timeout,
             max_retries=2
         )
+
         
         # Enhanced RAG-optimized system prompt
         self.system_prompt = """
@@ -212,7 +218,39 @@ Less like: "The product specifications are as follows"
 More like: "So it's 2mm thick, comes in sheets..."
 
 Stay natural, stay helpful, stay human.
+
+
+# QUOTATION Conversation flow
+
+**When users ask for quotations or pricing:**
+1. Recognize quotation requests: "quote", "quotation", "price", "cost", "how much", "pricing"
+2. For detailed quotes requiring follow-up, collect contact information naturally
+
+**Quotation conversation flow:**
+- Acknowledge: "Sure, I can get you a detailed quote for that!"
+- Explain value: "I'll send you the complete specifications and pricing directly"
+- Ask naturally: "What's your name and email so I can send over the details?"
+- Confirm: "Thanks [name]! Just to confirm, your email is [email]?"
+
+**Examples:**
+
+**Customer: "Can you please share the quotation of SS316 of 10mm thickness 20 sheets?"**
+✅ Good: "I can certainly share the details for the SS316 10mm 20 sheets product. To send you the detailed specifications and a quote directly, may I please have your name and email address?"
+
+**After they provide info:**
+✅ Good: "Thank you. Just to confirm, your email is [user's email]?"
+
+**Keep it natural:**
+- Don't make it sound like a form
+- Explain why you need the info
+- Confirm details to ensure accuracy
+- Continue the conversation naturally after collecting info
 """
+
+
+
+
+
 
         # Statistics
         self.stats = {
@@ -223,12 +261,17 @@ Stay natural, stay helpful, stay human.
             'product_searches_performed': 0,
             'products_found_in_context': 0
         }
+
+        self.customer_db = customer_db
         
         logger.info(f"🚀 OpenAI LLM initialized:")
         logger.info(f"   Model: {self.model}")
         logger.info(f"   Timeout: {self.timeout}s")
         logger.info(f"   Max history: {self.max_conversation_turns} turns")
         logger.info(f"   Product Search: {'Enabled' if product_search else 'Disabled'}")
+        
+
+    
     
     async def _search_relevant_products(self, user_message: str) -> Optional[str]:
         """
@@ -342,16 +385,86 @@ No specific product matches found for the query. Consider asking clarifying ques
         if len(self.conversation_history) > self.max_conversation_turns * 2:
             self.conversation_history = self.conversation_history[-self.max_conversation_turns * 2:]
     
-    async def generate_response(self, user_message: str) -> Dict[str, Any]:
+    def _extract_basic_info(self, user_message: str) -> tuple:
         """
-        Generate a response for the user message using OpenAI API
+        Extract basic customer info from message with better natural language parsing
+        Returns: (customer_name, customer_email, product_requested)
+        """
+        import re
         
-        Args:
-            user_message: The user's input text
-            
-        Returns:
-            Dictionary containing response text and metadata
-        """
+        customer_name = None
+        customer_email = None
+        product_requested = None
+        
+        # Convert to lowercase for easier matching
+        message_lower = user_message.lower()
+        
+        # Improved name extraction
+        name_patterns = [
+            r'my name is (\w+)',
+            r'name is (\w+)',
+            r'i am (\w+)',
+            r'this is (\w+)',
+            r'call me (\w+)',
+            r"i'm (\w+)"
+        ]
+        
+        for pattern in name_patterns:
+            match = re.search(pattern, message_lower)
+            if match:
+                customer_name = match.group(1).title()  # Capitalize first letter
+                break
+        
+        # Improved email extraction with common spoken patterns
+        email_patterns = [
+            r'(\w+@\w+\.\w+)',  # Standard email format
+            r'(\w+)\s*at\s*(\w+)\s*dot\s*(\w+)',  # "nihal at gmail dot com"
+            r'(\w+)\s*@\s*(\w+)\s*\.\s*(\w+)',  # "nihal @ gmail . com"
+        ]
+        
+        # First try standard email format
+        email_match = re.search(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', user_message)
+        if email_match:
+            customer_email = email_match.group().lower()
+        else:
+            # Try spoken patterns like "at" and "dot"
+            for pattern in email_patterns[1:]:  # Skip first pattern since we already tried it
+                match = re.search(pattern, message_lower)
+                if match:
+                    # Reconstruct email from "at" and "dot" pattern
+                    if len(match.groups()) == 3:
+                        username, domain, tld = match.groups()
+                        customer_email = f"{username}@{domain}.{tld}".lower()
+                        break
+                    elif len(match.groups()) == 1:
+                        customer_email = match.group(1).lower()
+                        break
+        
+        # Improved product extraction
+        product_keywords = {
+            'aluminum': ['aluminum', 'aluminium', 'al sheet', 'al plate'],
+            'steel': ['steel', 'stainless steel', 'ss', 'stainless'],
+            'sheet': ['sheet', 'sheets'],
+            'plate': ['plate', 'plates'],
+            'pipe': ['pipe', 'pipes', 'tube', 'tubes'],
+            'rod': ['rod', 'rods', 'bar', 'bars']
+        }
+        
+        # Check for specific product mentions
+        for product, keywords in product_keywords.items():
+            if any(keyword in message_lower for keyword in keywords):
+                product_requested = product
+                break
+        
+        # Log what we extracted for debugging
+        logger.info(f"🔍 Extracted info - Name: {customer_name}, Email: {customer_email}, Product: {product_requested}")
+        
+        return customer_name, customer_email, product_requested
+
+
+
+    async def generate_response(self, user_message: str) -> Dict[str, Any]:
+        """Generate a response for the user message using OpenAI API"""
         start_time = datetime.now()
         self.stats['requests_sent'] += 1
         
@@ -388,6 +501,22 @@ No specific product matches found for the query. Consider asking clarifying ques
             processing_time = (datetime.now() - start_time).total_seconds()
             self.stats['responses_received'] += 1
             self.stats['total_processing_time'] += processing_time
+
+            # STORE IN DATABASE - WITH PROPER ERROR HANDLING
+            if self.customer_db and self.customer_db.is_connected:
+                try:
+                    customer_name, customer_email, product_requested = self._extract_basic_info(user_message)
+                    await self.customer_db.store_customer_query(
+                        full_query_text=user_message,
+                        customer_name=customer_name,
+                        customer_email=customer_email,
+                        product_requested=product_requested
+                    )
+                    logger.info(f"💾 Stored customer query in database")
+                except Exception as db_error:
+                    logger.error(f"❌ Failed to store in database: {db_error}")
+            else:
+                logger.warning("⚠️ Database not available - skipping storage")
             
             logger.info(f"🤖 OpenAI Response: '{response_text}'")
             logger.info(f"⏱️  Processing time: {processing_time:.2f}s")
@@ -401,12 +530,14 @@ No specific product matches found for the query. Consider asking clarifying ques
                 'conversation_turns': len(self.conversation_history) // 2,
                 'products_used_in_context': self.stats['products_found_in_context'],
                 'product_search_performed': self.stats['product_searches_performed'] > 0,
+                'database_stored': self.customer_db and self.customer_db.is_connected,
                 'openai_usage': {
                     'total_tokens': response.usage.total_tokens,
                     'prompt_tokens': response.usage.prompt_tokens,
                     'completion_tokens': response.usage.completion_tokens
                 } if hasattr(response, 'usage') and response.usage else None
             }
+            
             
         except asyncio.TimeoutError:
             logger.error("⏰ Request to OpenAI API timed out")

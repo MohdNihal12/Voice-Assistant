@@ -8,3 +8,5 @@ sentence_transformers
 sklearn
 pydub
 pyaudio
+asyncpg
+ffmpeg-python
