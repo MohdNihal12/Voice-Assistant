@@ -4,9 +4,11 @@ python-dotenv
 python-multipart
 openai
 elevenlabs
+azure-cognitiveservices-speech
 sentence_transformers
 sklearn
 pydub
 pyaudio
 asyncpg
 ffmpeg-python
+pydantic

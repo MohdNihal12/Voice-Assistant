@@ -1,0 +1,1469 @@
+{
+  "session_id": "20251113_135955",
+  "started_at": "2025-11-13T14:00:57.271301",
+  "last_updated": "2025-11-14T10:17:35.126545",
+  "model": "gpt-4o-mini",
+  "total_turns": 0,
+  "conversations": [
+    {
+      "session_id": "20251113_135955",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Hello.",
+          "timestamp": "2025-11-13T14:00:57.271301"
+        },
+        {
+          "role": "assistant",
+          "content": "Hey! What can I help you find today?",
+          "timestamp": "2025-11-13T14:00:59.191367"
+        },
+        {
+          "role": "user",
+          "content": "I want to stay the steel sheet",
+          "timestamp": "2025-11-13T14:01:15.459688"
+        },
+        {
+          "role": "assistant",
+          "content": "Got it! Are you looking for stainless steel sheets? If so, we have options available, like the SS 316L, which is great for a variety of applications. What thickness or size are you looking for?",
+          "timestamp": "2025-11-13T14:01:17.172225"
+        },
+        {
+          "role": "user",
+          "content": "नहीं,",
+          "timestamp": "2025-11-13T14:01:33.916380"
+        },
+        {
+          "role": "assistant",
+          "content": "अच्छा, कोई बात नहीं! तो आप किस तरह की स्टील शीट के बारे में सोच रहे हैं?",
+          "timestamp": "2025-11-13T14:01:35.307340"
+        },
+        {
+          "role": "user",
+          "content": "Hello?",
+          "timestamp": "2025-11-13T14:02:35.673694"
+        },
+        {
+          "role": "assistant",
+          "content": "Hi there! I’m here. What do you need help with?",
+          "timestamp": "2025-11-13T14:02:37.036971"
+        }
+      ]
+    },
+    {
+      "session_id": "20251113_140304",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Hello.",
+          "timestamp": "2025-11-13T14:00:57.271301"
+        },
+        {
+          "role": "assistant",
+          "content": "Hey! What can I help you find today?",
+          "timestamp": "2025-11-13T14:00:59.191367"
+        },
+        {
+          "role": "user",
+          "content": "I want to stay the steel sheet",
+          "timestamp": "2025-11-13T14:01:15.459688"
+        },
+        {
+          "role": "assistant",
+          "content": "Got it! Are you looking for stainless steel sheets? If so, we have options available, like the SS 316L, which is great for a variety of applications. What thickness or size are you looking for?",
+          "timestamp": "2025-11-13T14:01:17.172225"
+        },
+        {
+          "role": "user",
+          "content": "नहीं,",
+          "timestamp": "2025-11-13T14:01:33.916380"
+        },
+        {
+          "role": "assistant",
+          "content": "अच्छा, कोई बात नहीं! तो आप किस तरह की स्टील शीट के बारे में सोच रहे हैं?",
+          "timestamp": "2025-11-13T14:01:35.307340"
+        },
+        {
+          "role": "user",
+          "content": "Hello?",
+          "timestamp": "2025-11-13T14:02:35.673694"
+        },
+        {
+          "role": "assistant",
+          "content": "Hi there! I’m here. What do you need help with?",
+          "timestamp": "2025-11-13T14:02:37.036971"
+        },
+        {
+          "role": "user",
+          "content": "Hello.",
+          "timestamp": "2025-11-13T14:03:09.764635"
+        },
+        {
+          "role": "assistant",
+          "content": "Hey! How's it going? What can I assist you with today?",
+          "timestamp": "2025-11-13T14:03:11.310765"
+        },
+        {
+          "role": "user",
+          "content": "Okay. Yeah. Worry.",
+          "timestamp": "2025-11-13T14:03:18.462432"
+        },
+        {
+          "role": "assistant",
+          "content": "I see! It sounds like there might be something on your mind. Want to talk about it or is there something specific you're looking for help with?",
+          "timestamp": "2025-11-13T14:03:19.464618"
+        },
+        {
+          "role": "user",
+          "content": "Stainless steel sheet",
+          "timestamp": "2025-11-13T14:03:33.072512"
+        },
+        {
+          "role": "assistant",
+          "content": "Sure! We've got a few options for stainless steel sheets. \n\n1. **SS 430**: It's a cost-effective option, good for decorative trim and appliance parts. Comes in various thicknesses from 0.8mm to 5mm, priced around 12.5 AED per kg.\n\n2. **SS 316**: This one’s great for marine and chemical applications. It has good corrosion resistance, and the thickness ranges from 0.5mm to 12mm, priced at 20 AED per kg.\n\n3. **SS 316L**: This is a low carbon version of 316, perfect for surgical instruments and food processing. It's a bit pricier at 21 AED per kg, with thicknesses from 0.5mm to 10mm.\n\nWhich option sounds like it would work for you?",
+          "timestamp": "2025-11-13T14:03:36.309015"
+        },
+        {
+          "role": "user",
+          "content": "I'm looking for SS three one six.",
+          "timestamp": "2025-11-13T14:03:57.378484"
+        },
+        {
+          "role": "assistant",
+          "content": "Got it! So you're looking for SS 316. We've got that in stock. It comes in thicknesses ranging from 0.5mm to 12mm, and it’s about 20 AED per kg. It’s great for marine applications, chemical processing, and medical equipment. \n\nIs there a specific thickness or quantity you need?",
+          "timestamp": "2025-11-13T14:03:59.333112"
+        },
+        {
+          "role": "user",
+          "content": "Can you please share the quotation?",
+          "timestamp": "2025-11-13T14:04:08.185653"
+        },
+        {
+          "role": "assistant",
+          "content": "Sure! I can provide a detailed quote for the SS 316. Could you please let me know your name and email address so I can send it over?",
+          "timestamp": "2025-11-13T14:04:15.488489"
+        },
+        {
+          "role": "user",
+          "content": "My name is Ahmed, and my email address is",
+          "timestamp": "2025-11-13T14:04:22.025086"
+        },
+        {
+          "role": "assistant",
+          "content": "Thanks, Ahmed! Just to confirm, what's your email address?",
+          "timestamp": "2025-11-13T14:04:23.154701"
+        },
+        {
+          "role": "user",
+          "content": "f mother g mail dot com.",
+          "timestamp": "2025-11-13T14:04:23.566621"
+        },
+        {
+          "role": "assistant",
+          "content": "Got it! Just to confirm, your email is fmother@gmail.com, right? I'll send you the quotation for the SS 316 directly to that address.",
+          "timestamp": "2025-11-13T14:04:25.175229"
+        },
+        {
+          "role": "user",
+          "content": "No. No. Wrong at risk.",
+          "timestamp": "2025-11-13T14:04:32.525729"
+        },
+        {
+          "role": "assistant",
+          "content": "Oh, I see! Sorry about that, Ahmed. Can you correct me with the right email?",
+          "timestamp": "2025-11-13T14:04:33.732622"
+        },
+        {
+          "role": "user",
+          "content": "At I n dot a",
+          "timestamp": "2025-11-13T14:04:40.466730"
+        },
+        {
+          "role": "assistant",
+          "content": "Got it! So, just to confirm, is your email **fmother@ina**? If that’s correct, I'll send the quote to that address.",
+          "timestamp": "2025-11-13T14:04:42.100204"
+        },
+        {
+          "role": "user",
+          "content": "No.",
+          "timestamp": "2025-11-13T14:04:45.078119"
+        },
+        {
+          "role": "assistant",
+          "content": "Alright, let’s get it right! Can you please share the correct email for me?",
+          "timestamp": "2025-11-13T14:04:47.800073"
+        },
+        {
+          "role": "user",
+          "content": "Ahmed at",
+          "timestamp": "2025-11-13T14:04:53.004725"
+        },
+        {
+          "role": "assistant",
+          "content": "Okay, I’m following you! What's the rest of your email address?",
+          "timestamp": "2025-11-13T14:04:53.740875"
+        },
+        {
+          "role": "user",
+          "content": "yin dot ae",
+          "timestamp": "2025-11-13T14:04:53.799220"
+        },
+        {
+          "role": "assistant",
+          "content": "Thanks for that! So just to confirm, your email is **ahmed@yin.ae**? I'll send the quote for the SS 316 sheets to that address.",
+          "timestamp": "2025-11-13T14:04:55.053716"
+        },
+        {
+          "role": "user",
+          "content": "Yes.",
+          "timestamp": "2025-11-13T14:04:57.886746"
+        },
+        {
+          "role": "assistant",
+          "content": "Great! I'll send the quotation for the SS 316 to ahmed@yin.ae right away. If you have any other questions or need anything else, just let me know!",
+          "timestamp": "2025-11-13T14:04:59.612288"
+        },
+        {
+          "role": "user",
+          "content": "Thank you.",
+          "timestamp": "2025-11-13T14:05:01.721425"
+        },
+        {
+          "role": "assistant",
+          "content": "You're welcome! If you need any more help later, feel free to reach out. Have a great day, Ahmed!",
+          "timestamp": "2025-11-13T14:05:03.628661"
+        }
+      ]
+    },
+    {
+      "session_id": "20251113_141219",
+      "messages": [
+        {
+          "role": "user",
+          "content": "I want to stay the steel sheet",
+          "timestamp": "2025-11-13T14:01:15.459688"
+        },
+        {
+          "role": "assistant",
+          "content": "Got it! Are you looking for stainless steel sheets? If so, we have options available, like the SS 316L, which is great for a variety of applications. What thickness or size are you looking for?",
+          "timestamp": "2025-11-13T14:01:17.172225"
+        },
+        {
+          "role": "user",
+          "content": "नहीं,",
+          "timestamp": "2025-11-13T14:01:33.916380"
+        },
+        {
+          "role": "assistant",
+          "content": "अच्छा, कोई बात नहीं! तो आप किस तरह की स्टील शीट के बारे में सोच रहे हैं?",
+          "timestamp": "2025-11-13T14:01:35.307340"
+        },
+        {
+          "role": "user",
+          "content": "Hello?",
+          "timestamp": "2025-11-13T14:02:35.673694"
+        },
+        {
+          "role": "assistant",
+          "content": "Hi there! I’m here. What do you need help with?",
+          "timestamp": "2025-11-13T14:02:37.036971"
+        },
+        {
+          "role": "user",
+          "content": "Hello.",
+          "timestamp": "2025-11-13T14:03:09.764635"
+        },
+        {
+          "role": "assistant",
+          "content": "Hey! How's it going? What can I assist you with today?",
+          "timestamp": "2025-11-13T14:03:11.310765"
+        },
+        {
+          "role": "user",
+          "content": "Okay. Yeah. Worry.",
+          "timestamp": "2025-11-13T14:03:18.462432"
+        },
+        {
+          "role": "assistant",
+          "content": "I see! It sounds like there might be something on your mind. Want to talk about it or is there something specific you're looking for help with?",
+          "timestamp": "2025-11-13T14:03:19.464618"
+        },
+        {
+          "role": "user",
+          "content": "Stainless steel sheet",
+          "timestamp": "2025-11-13T14:03:33.072512"
+        },
+        {
+          "role": "assistant",
+          "content": "Sure! We've got a few options for stainless steel sheets. \n\n1. **SS 430**: It's a cost-effective option, good for decorative trim and appliance parts. Comes in various thicknesses from 0.8mm to 5mm, priced around 12.5 AED per kg.\n\n2. **SS 316**: This one’s great for marine and chemical applications. It has good corrosion resistance, and the thickness ranges from 0.5mm to 12mm, priced at 20 AED per kg.\n\n3. **SS 316L**: This is a low carbon version of 316, perfect for surgical instruments and food processing. It's a bit pricier at 21 AED per kg, with thicknesses from 0.5mm to 10mm.\n\nWhich option sounds like it would work for you?",
+          "timestamp": "2025-11-13T14:03:36.309015"
+        },
+        {
+          "role": "user",
+          "content": "I'm looking for SS three one six.",
+          "timestamp": "2025-11-13T14:03:57.378484"
+        },
+        {
+          "role": "assistant",
+          "content": "Got it! So you're looking for SS 316. We've got that in stock. It comes in thicknesses ranging from 0.5mm to 12mm, and it’s about 20 AED per kg. It’s great for marine applications, chemical processing, and medical equipment. \n\nIs there a specific thickness or quantity you need?",
+          "timestamp": "2025-11-13T14:03:59.333112"
+        },
+        {
+          "role": "user",
+          "content": "Can you please share the quotation?",
+          "timestamp": "2025-11-13T14:04:08.185653"
+        },
+        {
+          "role": "assistant",
+          "content": "Sure! I can provide a detailed quote for the SS 316. Could you please let me know your name and email address so I can send it over?",
+          "timestamp": "2025-11-13T14:04:15.488489"
+        },
+        {
+          "role": "user",
+          "content": "My name is Ahmed, and my email address is",
+          "timestamp": "2025-11-13T14:04:22.025086"
+        },
+        {
+          "role": "assistant",
+          "content": "Thanks, Ahmed! Just to confirm, what's your email address?",
+          "timestamp": "2025-11-13T14:04:23.154701"
+        },
+        {
+          "role": "user",
+          "content": "f mother g mail dot com.",
+          "timestamp": "2025-11-13T14:04:23.566621"
+        },
+        {
+          "role": "assistant",
+          "content": "Got it! Just to confirm, your email is fmother@gmail.com, right? I'll send you the quotation for the SS 316 directly to that address.",
+          "timestamp": "2025-11-13T14:04:25.175229"
+        },
+        {
+          "role": "user",
+          "content": "No. No. Wrong at risk.",
+          "timestamp": "2025-11-13T14:04:32.525729"
+        },
+        {
+          "role": "assistant",
+          "content": "Oh, I see! Sorry about that, Ahmed. Can you correct me with the right email?",
+          "timestamp": "2025-11-13T14:04:33.732622"
+        },
+        {
+          "role": "user",
+          "content": "At I n dot a",
+          "timestamp": "2025-11-13T14:04:40.466730"
+        },
+        {
+          "role": "assistant",
+          "content": "Got it! So, just to confirm, is your email **fmother@ina**? If that’s correct, I'll send the quote to that address.",
+          "timestamp": "2025-11-13T14:04:42.100204"
+        },
+        {
+          "role": "user",
+          "content": "No.",
+          "timestamp": "2025-11-13T14:04:45.078119"
+        },
+        {
+          "role": "assistant",
+          "content": "Alright, let’s get it right! Can you please share the correct email for me?",
+          "timestamp": "2025-11-13T14:04:47.800073"
+        },
+        {
+          "role": "user",
+          "content": "Ahmed at",
+          "timestamp": "2025-11-13T14:04:53.004725"
+        },
+        {
+          "role": "assistant",
+          "content": "Okay, I’m following you! What's the rest of your email address?",
+          "timestamp": "2025-11-13T14:04:53.740875"
+        },
+        {
+          "role": "user",
+          "content": "yin dot ae",
+          "timestamp": "2025-11-13T14:04:53.799220"
+        },
+        {
+          "role": "assistant",
+          "content": "Thanks for that! So just to confirm, your email is **ahmed@yin.ae**? I'll send the quote for the SS 316 sheets to that address.",
+          "timestamp": "2025-11-13T14:04:55.053716"
+        },
+        {
+          "role": "user",
+          "content": "Yes.",
+          "timestamp": "2025-11-13T14:04:57.886746"
+        },
+        {
+          "role": "assistant",
+          "content": "Great! I'll send the quotation for the SS 316 to ahmed@yin.ae right away. If you have any other questions or need anything else, just let me know!",
+          "timestamp": "2025-11-13T14:04:59.612288"
+        },
+        {
+          "role": "user",
+          "content": "Thank you.",
+          "timestamp": "2025-11-13T14:05:01.721425"
+        },
+        {
+          "role": "assistant",
+          "content": "You're welcome! If you need any more help later, feel free to reach out. Have a great day, Ahmed!",
+          "timestamp": "2025-11-13T14:05:03.628661"
+        },
+        {
+          "role": "user",
+          "content": "Hello.",
+          "timestamp": "2025-11-13T14:12:28.782730"
+        },
+        {
+          "role": "assistant",
+          "content": "Hey there! What can I help you find today?",
+          "timestamp": "2025-11-13T14:12:29.776616"
+        },
+        {
+          "role": "user",
+          "content": "Three one six Charlie.",
+          "timestamp": "2025-11-13T14:12:34.160839"
+        },
+        {
+          "role": "assistant",
+          "content": "Got it! You're looking for stainless steel 316, right? What do you need it for?",
+          "timestamp": "2025-11-13T14:12:35.306469"
+        },
+        {
+          "role": "user",
+          "content": "Ujei s s three one six.",
+          "timestamp": "2025-11-13T14:12:40.566131"
+        },
+        {
+          "role": "assistant",
+          "content": "I’m not familiar with \"Ujei.\" Could you clarify that for me? Are you looking for specific information or a quote for SS 316?",
+          "timestamp": "2025-11-13T14:12:41.871133"
+        }
+      ]
+    },
+    {
+      "session_id": "20251113_141302",
+      "messages": [
+        {
+          "role": "user",
+          "content": "At I n dot a",
+          "timestamp": "2025-11-13T14:04:40.466730"
+        },
+        {
+          "role": "assistant",
+          "content": "Got it! So, just to confirm, is your email **fmother@ina**? If that’s correct, I'll send the quote to that address.",
+          "timestamp": "2025-11-13T14:04:42.100204"
+        },
+        {
+          "role": "user",
+          "content": "No.",
+          "timestamp": "2025-11-13T14:04:45.078119"
+        },
+        {
+          "role": "assistant",
+          "content": "Alright, let’s get it right! Can you please share the correct email for me?",
+          "timestamp": "2025-11-13T14:04:47.800073"
+        },
+        {
+          "role": "user",
+          "content": "Ahmed at",
+          "timestamp": "2025-11-13T14:04:53.004725"
+        },
+        {
+          "role": "assistant",
+          "content": "Okay, I’m following you! What's the rest of your email address?",
+          "timestamp": "2025-11-13T14:04:53.740875"
+        },
+        {
+          "role": "user",
+          "content": "yin dot ae",
+          "timestamp": "2025-11-13T14:04:53.799220"
+        },
+        {
+          "role": "assistant",
+          "content": "Thanks for that! So just to confirm, your email is **ahmed@yin.ae**? I'll send the quote for the SS 316 sheets to that address.",
+          "timestamp": "2025-11-13T14:04:55.053716"
+        },
+        {
+          "role": "user",
+          "content": "Yes.",
+          "timestamp": "2025-11-13T14:04:57.886746"
+        },
+        {
+          "role": "assistant",
+          "content": "Great! I'll send the quotation for the SS 316 to ahmed@yin.ae right away. If you have any other questions or need anything else, just let me know!",
+          "timestamp": "2025-11-13T14:04:59.612288"
+        },
+        {
+          "role": "user",
+          "content": "Thank you.",
+          "timestamp": "2025-11-13T14:05:01.721425"
+        },
+        {
+          "role": "assistant",
+          "content": "You're welcome! If you need any more help later, feel free to reach out. Have a great day, Ahmed!",
+          "timestamp": "2025-11-13T14:05:03.628661"
+        },
+        {
+          "role": "user",
+          "content": "Hello.",
+          "timestamp": "2025-11-13T14:12:28.782730"
+        },
+        {
+          "role": "assistant",
+          "content": "Hey there! What can I help you find today?",
+          "timestamp": "2025-11-13T14:12:29.776616"
+        },
+        {
+          "role": "user",
+          "content": "Three one six Charlie.",
+          "timestamp": "2025-11-13T14:12:34.160839"
+        },
+        {
+          "role": "assistant",
+          "content": "Got it! You're looking for stainless steel 316, right? What do you need it for?",
+          "timestamp": "2025-11-13T14:12:35.306469"
+        },
+        {
+          "role": "user",
+          "content": "Ujei s s three one six.",
+          "timestamp": "2025-11-13T14:12:40.566131"
+        },
+        {
+          "role": "assistant",
+          "content": "I’m not familiar with \"Ujei.\" Could you clarify that for me? Are you looking for specific information or a quote for SS 316?",
+          "timestamp": "2025-11-13T14:12:41.871133"
+        },
+        {
+          "role": "user",
+          "content": "Hi.",
+          "timestamp": "2025-11-13T14:13:22.804058"
+        },
+        {
+          "role": "assistant",
+          "content": "Hey! How's it going? What can I help you with today?",
+          "timestamp": "2025-11-13T14:13:23.627395"
+        },
+        {
+          "role": "user",
+          "content": "मुझे SS three one six चाहिए.",
+          "timestamp": "2025-11-13T14:13:39.980535"
+        },
+        {
+          "role": "assistant",
+          "content": "ठीक है! आपको SS 316 की किस मात्रा और मोटाई की जरूरत है?",
+          "timestamp": "2025-11-13T14:13:41.094291"
+        },
+        {
+          "role": "user",
+          "content": "पर्याणम होने",
+          "timestamp": "2025-11-13T14:13:46.895744"
+        },
+        {
+          "role": "assistant",
+          "content": "मुझे समझ नहीं आया, क्या आप इसे थोड़ी और स्पष्ट कर सकते हैं? क्या आप SS 316 पर कुछ विशेष जानकारी चाहते हैं या फिर कीमत?",
+          "timestamp": "2025-11-13T14:13:48.181377"
+        },
+        {
+          "role": "user",
+          "content": "इल्लाह",
+          "timestamp": "2025-11-13T14:13:52.245710"
+        },
+        {
+          "role": "assistant",
+          "content": "मैं आपको पूरी तरह से समझ नहीं पा रहा हूँ। क्या आप बता सकते हैं कि आप क्या जानना चाहते हैं या किस चीज़ की जरूरत है?",
+          "timestamp": "2025-11-13T14:13:54.057556"
+        },
+        {
+          "role": "user",
+          "content": "I want SS three one six.",
+          "timestamp": "2025-11-13T14:13:57.874966"
+        },
+        {
+          "role": "assistant",
+          "content": "Got it! We've got SS 316 available. What thickness are you looking for, and how much do you need?",
+          "timestamp": "2025-11-13T14:13:58.894427"
+        },
+        {
+          "role": "user",
+          "content": "Henry",
+          "timestamp": "2025-11-13T14:14:02.991345"
+        },
+        {
+          "role": "assistant",
+          "content": "I’m not sure I follow—are you asking about something specific related to SS 316, or is Henry a reference to something else? Let me know how I can help!",
+          "timestamp": "2025-11-13T14:14:04.584379"
+        },
+        {
+          "role": "user",
+          "content": "फिरे को",
+          "timestamp": "2025-11-13T14:14:16.054178"
+        },
+        {
+          "role": "assistant",
+          "content": "मुझे थोड़ा और स्पष्ट करें, कृपया। क्या आप SS 316 पर कोई विशेष जानकारी चाहते हैं? या कुछ और?",
+          "timestamp": "2025-11-13T14:14:17.148405"
+        },
+        {
+          "role": "user",
+          "content": "मेरे को,",
+          "timestamp": "2025-11-13T14:14:20.418079"
+        },
+        {
+          "role": "assistant",
+          "content": "मुझे समझने में थोड़ी दिक्कत हो रही है। क्या आप बता सकते हैं कि आपको क्या चाहिए?",
+          "timestamp": "2025-11-13T14:14:21.253254"
+        },
+        {
+          "role": "user",
+          "content": "कुछ नहीं.",
+          "timestamp": "2025-11-13T14:14:27.308531"
+        },
+        {
+          "role": "assistant",
+          "content": "ठीक है! अगर आपको बाद में किसी चीज़ की जरूरत पड़े, तो बेझिझक बताइएगा। धन्यवाद!",
+          "timestamp": "2025-11-13T14:14:28.414815"
+        },
+        {
+          "role": "user",
+          "content": "Hola.",
+          "timestamp": "2025-11-13T14:19:24.948694"
+        },
+        {
+          "role": "assistant",
+          "content": "¡Hola! ¿En qué puedo ayudarte hoy?",
+          "timestamp": "2025-11-13T14:19:25.991547"
+        },
+        {
+          "role": "user",
+          "content": "¿Qué estás?",
+          "timestamp": "2025-11-13T14:19:29.309439"
+        },
+        {
+          "role": "assistant",
+          "content": "Soy un asistente de ventas aquí para ayudarte a encontrar lo que necesites en acero y aluminio. ¿Estás buscando algo específico?",
+          "timestamp": "2025-11-13T14:19:30.264753"
+        }
+      ]
+    },
+    {
+      "session_id": "20251113_160110",
+      "messages": [
+        {
+          "role": "assistant",
+          "content": "I'm doing well, thanks! Just here and ready to help you out. What do you need today?",
+          "timestamp": "2025-11-13T17:30:59.794052"
+        },
+        {
+          "role": "user",
+          "content": "I want to know about this thing. Let's",
+          "timestamp": "2025-11-13T17:31:10.799099"
+        },
+        {
+          "role": "assistant",
+          "content": "Sure! What specific thing do you want to know about? Just let me know!",
+          "timestamp": "2025-11-13T17:31:11.749457"
+        },
+        {
+          "role": "user",
+          "content": "steel sheet you have.",
+          "timestamp": "2025-11-13T17:31:11.815586"
+        },
+        {
+          "role": "assistant",
+          "content": "We've got a great option for steel sheets! I can tell you about stainless steel, like SS 316L, which is popular for its superior corrosion resistance. It comes in various thicknesses from 0.5mm to 10mm, and it’s excellent for applications like chemical tanks and food processing. \n\nNeed more details on size or price, or are you looking for something else?",
+          "timestamp": "2025-11-13T17:31:15.404621"
+        },
+        {
+          "role": "user",
+          "content": "Yes. I want",
+          "timestamp": "2025-11-13T17:31:47.204214"
+        },
+        {
+          "role": "assistant",
+          "content": "Got it! What exactly do you want to know about the steel sheets? Are you looking for specific sizes, grades, or pricing? Let me know!",
+          "timestamp": "2025-11-13T17:31:48.599417"
+        },
+        {
+          "role": "user",
+          "content": "Prepare a code for SS304 of twenty millimeters thickness.",
+          "timestamp": "2025-11-13T17:32:03.598206"
+        },
+        {
+          "role": "assistant",
+          "content": "Hmm, we don't actually have SS304 in a 20mm thickness; the maximum we stock is 12mm for that grade. \n\nHowever, if you need something around that thickness, you might consider using SS316, which is also great for corrosion resistance. Want me to look into that for you?",
+          "timestamp": "2025-11-13T17:32:06.515771"
+        },
+        {
+          "role": "user",
+          "content": "Não.",
+          "timestamp": "2025-11-13T17:32:44.000954"
+        },
+        {
+          "role": "assistant",
+          "content": "Got it! If there’s something else you’d like to discuss or if you have any questions, just let me know!",
+          "timestamp": "2025-11-13T17:32:45.120320"
+        },
+        {
+          "role": "user",
+          "content": "Thank you.",
+          "timestamp": "2025-11-13T17:32:53.992740"
+        },
+        {
+          "role": "assistant",
+          "content": "You're welcome! If you need anything else, just give me a shout. Have a great day!",
+          "timestamp": "2025-11-13T17:32:54.954131"
+        },
+        {
+          "role": "user",
+          "content": "Hola.",
+          "timestamp": "2025-11-13T17:41:40.469255"
+        },
+        {
+          "role": "assistant",
+          "content": "¡Hola de nuevo! ¿En qué puedo ayudarte hoy?",
+          "timestamp": "2025-11-13T17:41:41.742837"
+        },
+        {
+          "role": "user",
+          "content": "तुम्हारा नाम क्या है?",
+          "timestamp": "2025-11-13T17:41:53.032864"
+        },
+        {
+          "role": "assistant",
+          "content": "मेरा नाम एलेक्स है! मैं यहाँ मदद करने के लिए हूँ। आपको किस चीज़ की जानकारी चाहिए?",
+          "timestamp": "2025-11-13T17:41:54.231099"
+        },
+        {
+          "role": "user",
+          "content": "I want to know about stainless steel sheet.",
+          "timestamp": "2025-11-13T17:42:06.868011"
+        },
+        {
+          "role": "assistant",
+          "content": "Sure thing! We have a few options for stainless steel sheets. \n\n1. **SS 430**: This is a cost-effective choice with good corrosion resistance, available in thicknesses from 0.8mm to 5mm. It's great for decorative trim and automotive applications, priced around 12.5 AED per kg.\n\n2. **SS 316**: This one offers superior corrosion resistance, especially in marine environments. It comes in thicknesses from 0.5mm to 12mm and is priced at about 20 AED per kg. It’s perfect for chemical processing and medical equipment.\n\n3. **SS 316L**: Similar to SS 316, but with lower carbon content, making it excellent for welding. Also available in thicknesses from 0.5mm to 10mm, priced at around 21 AED per kg. It’s commonly used in pharmaceuticals and food processing.\n\nWhich one interests you the most?",
+          "timestamp": "2025-11-13T17:42:12.735449"
+        },
+        {
+          "role": "user",
+          "content": "Same that",
+          "timestamp": "2025-11-13T17:42:13.496746"
+        },
+        {
+          "role": "assistant",
+          "content": "Okay! Just to clarify, are you looking for more details on a specific type, like SS316 or SS316L? Or do you need a quote for one of those grades? Let me know how I can assist!",
+          "timestamp": "2025-11-13T17:42:15.120439"
+        },
+        {
+          "role": "user",
+          "content": "Not a receiving.",
+          "timestamp": "2025-11-13T17:42:22.705235"
+        },
+        {
+          "role": "assistant",
+          "content": "Gotcha! If there’s something specific you need or any other questions you have, just let me know. I'm here to help!",
+          "timestamp": "2025-11-13T17:42:24.246629"
+        },
+        {
+          "role": "user",
+          "content": "It's coming. It takes time.",
+          "timestamp": "2025-11-13T17:42:31.921225"
+        },
+        {
+          "role": "user",
+          "content": "Hello.",
+          "timestamp": "2025-11-13T17:44:53.361517"
+        },
+        {
+          "role": "assistant",
+          "content": "Hey there! How can I help you today?",
+          "timestamp": "2025-11-13T17:44:54.082374"
+        },
+        {
+          "role": "user",
+          "content": "How are you doing?",
+          "timestamp": "2025-11-13T17:44:59.555591"
+        },
+        {
+          "role": "assistant",
+          "content": "I’m doing well, thanks for asking! How about you? What’s on your mind today?",
+          "timestamp": "2025-11-13T17:45:00.730188"
+        },
+        {
+          "role": "user",
+          "content": "Do you have stainless teeth",
+          "timestamp": "2025-11-13T17:45:09.792805"
+        },
+        {
+          "role": "assistant",
+          "content": "Hmm, I think you might mean stainless steel sheets, right? If that's the case, I've got a few options for you! Just let me know if you want details on a specific grade or thickness.",
+          "timestamp": "2025-11-13T17:45:11.428446"
+        },
+        {
+          "role": "user",
+          "content": "Yes. I'm looking for SS three zero four.",
+          "timestamp": "2025-11-13T17:45:28.493945"
+        },
+        {
+          "role": "assistant",
+          "content": "Perfect, I’ve got just the thing! We have **SS 304** stainless steel sheets available. They come in various thicknesses from 0.5mm up to 12mm, and the price is around 15.5 AED per kg. \n\nThis grade is great for kitchen equipment, architectural applications, and food processing because of its excellent corrosion resistance. \n\nDo you need any specific thickness or size?",
+          "timestamp": "2025-11-13T17:45:31.450932"
+        },
+        {
+          "role": "user",
+          "content": "Can you please send it quotation?",
+          "timestamp": "2025-11-13T17:45:54.097174"
+        },
+        {
+          "role": "assistant",
+          "content": "Sure! I can get you a detailed quote for the SS 304 sheets. Could you please provide your name and email address so I can send over the specifics?",
+          "timestamp": "2025-11-13T17:45:55.769540"
+        },
+        {
+          "role": "user",
+          "content": "My name is Nehal.",
+          "timestamp": "2025-11-13T17:46:08.960215"
+        },
+        {
+          "role": "assistant",
+          "content": "Thanks, Nehal! Just to confirm, could you share your email address so I can send you the quotation?",
+          "timestamp": "2025-11-13T17:46:10.139291"
+        },
+        {
+          "role": "user",
+          "content": "निहाल at gmail dot com",
+          "timestamp": "2025-11-13T17:46:21.760139"
+        },
+        {
+          "role": "assistant",
+          "content": "Got it, Nehal! Just to confirm, your email is निहाल@gmail.com? I'll send over the quotation for the SS 304 sheets right away!",
+          "timestamp": "2025-11-13T17:46:23.012096"
+        },
+        {
+          "role": "user",
+          "content": "Thank you.",
+          "timestamp": "2025-11-13T17:46:37.118531"
+        },
+        {
+          "role": "assistant",
+          "content": "You're welcome! If you have any more questions or need further assistance, just let me know. Have a great day!",
+          "timestamp": "2025-11-13T17:46:38.124023"
+        }
+      ]
+    },
+    {
+      "session_id": "20251113_174827",
+      "messages": [
+        {
+          "role": "assistant",
+          "content": "Okay! Just to clarify, are you looking for more details on a specific type, like SS316 or SS316L? Or do you need a quote for one of those grades? Let me know how I can assist!",
+          "timestamp": "2025-11-13T17:42:15.120439"
+        },
+        {
+          "role": "user",
+          "content": "Not a receiving.",
+          "timestamp": "2025-11-13T17:42:22.705235"
+        },
+        {
+          "role": "assistant",
+          "content": "Gotcha! If there’s something specific you need or any other questions you have, just let me know. I'm here to help!",
+          "timestamp": "2025-11-13T17:42:24.246629"
+        },
+        {
+          "role": "user",
+          "content": "It's coming. It takes time.",
+          "timestamp": "2025-11-13T17:42:31.921225"
+        },
+        {
+          "role": "user",
+          "content": "Hello.",
+          "timestamp": "2025-11-13T17:44:53.361517"
+        },
+        {
+          "role": "assistant",
+          "content": "Hey there! How can I help you today?",
+          "timestamp": "2025-11-13T17:44:54.082374"
+        },
+        {
+          "role": "user",
+          "content": "How are you doing?",
+          "timestamp": "2025-11-13T17:44:59.555591"
+        },
+        {
+          "role": "assistant",
+          "content": "I’m doing well, thanks for asking! How about you? What’s on your mind today?",
+          "timestamp": "2025-11-13T17:45:00.730188"
+        },
+        {
+          "role": "user",
+          "content": "Do you have stainless teeth",
+          "timestamp": "2025-11-13T17:45:09.792805"
+        },
+        {
+          "role": "assistant",
+          "content": "Hmm, I think you might mean stainless steel sheets, right? If that's the case, I've got a few options for you! Just let me know if you want details on a specific grade or thickness.",
+          "timestamp": "2025-11-13T17:45:11.428446"
+        },
+        {
+          "role": "user",
+          "content": "Yes. I'm looking for SS three zero four.",
+          "timestamp": "2025-11-13T17:45:28.493945"
+        },
+        {
+          "role": "assistant",
+          "content": "Perfect, I’ve got just the thing! We have **SS 304** stainless steel sheets available. They come in various thicknesses from 0.5mm up to 12mm, and the price is around 15.5 AED per kg. \n\nThis grade is great for kitchen equipment, architectural applications, and food processing because of its excellent corrosion resistance. \n\nDo you need any specific thickness or size?",
+          "timestamp": "2025-11-13T17:45:31.450932"
+        },
+        {
+          "role": "user",
+          "content": "Can you please send it quotation?",
+          "timestamp": "2025-11-13T17:45:54.097174"
+        },
+        {
+          "role": "assistant",
+          "content": "Sure! I can get you a detailed quote for the SS 304 sheets. Could you please provide your name and email address so I can send over the specifics?",
+          "timestamp": "2025-11-13T17:45:55.769540"
+        },
+        {
+          "role": "user",
+          "content": "My name is Nehal.",
+          "timestamp": "2025-11-13T17:46:08.960215"
+        },
+        {
+          "role": "assistant",
+          "content": "Thanks, Nehal! Just to confirm, could you share your email address so I can send you the quotation?",
+          "timestamp": "2025-11-13T17:46:10.139291"
+        },
+        {
+          "role": "user",
+          "content": "निहाल at gmail dot com",
+          "timestamp": "2025-11-13T17:46:21.760139"
+        },
+        {
+          "role": "assistant",
+          "content": "Got it, Nehal! Just to confirm, your email is निहाल@gmail.com? I'll send over the quotation for the SS 304 sheets right away!",
+          "timestamp": "2025-11-13T17:46:23.012096"
+        },
+        {
+          "role": "user",
+          "content": "Thank you.",
+          "timestamp": "2025-11-13T17:46:37.118531"
+        },
+        {
+          "role": "assistant",
+          "content": "You're welcome! If you have any more questions or need further assistance, just let me know. Have a great day!",
+          "timestamp": "2025-11-13T17:46:38.124023"
+        },
+        {
+          "role": "user",
+          "content": "Hello.",
+          "timestamp": "2025-11-13T17:48:40.961730"
+        },
+        {
+          "role": "assistant",
+          "content": "Hey there! What can I help you with today?",
+          "timestamp": "2025-11-13T17:48:42.632342"
+        },
+        {
+          "role": "user",
+          "content": "How are you doing?",
+          "timestamp": "2025-11-13T17:48:49.126777"
+        },
+        {
+          "role": "assistant",
+          "content": "I’m doing well, thanks! How about you? What’s on your mind today?",
+          "timestamp": "2025-11-13T17:48:50.132007"
+        },
+        {
+          "role": "user",
+          "content": "I'm looking for RSS three zero four.",
+          "timestamp": "2025-11-13T17:48:57.595945"
+        },
+        {
+          "role": "assistant",
+          "content": "It sounds like you might be referring to SS 304, right? If so, I can help with that! Just let me know what specific size or thickness you need, and we can go from there.",
+          "timestamp": "2025-11-13T17:48:59.112382"
+        },
+        {
+          "role": "user",
+          "content": "It's four thickness.",
+          "timestamp": "2025-11-13T17:49:15.783435"
+        },
+        {
+          "role": "assistant",
+          "content": "Got it! We have SS 304 sheets available in various thicknesses, including 4mm. This grade is perfect for corrosion resistance and is commonly used in kitchens and food processing industries. \n\nWould you like a quote for the 4mm thickness?",
+          "timestamp": "2025-11-13T17:49:17.325407"
+        },
+        {
+          "role": "user",
+          "content": "Yes, generate a quotation.",
+          "timestamp": "2025-11-13T17:49:35.007410"
+        },
+        {
+          "role": "assistant",
+          "content": "Sure thing! I can get that quotation for you. Could you please provide your name and email address so I can send you the details?",
+          "timestamp": "2025-11-13T17:49:36.073054"
+        },
+        {
+          "role": "user",
+          "content": "Hi.",
+          "timestamp": "2025-11-13T17:50:04.734858"
+        },
+        {
+          "role": "assistant",
+          "content": "Hey there! How can I assist you today?",
+          "timestamp": "2025-11-13T17:50:05.433862"
+        },
+        {
+          "role": "user",
+          "content": "मुझे SS three zero four चाहिए.",
+          "timestamp": "2025-11-13T17:50:11.957181"
+        },
+        {
+          "role": "assistant",
+          "content": "बिल्कुल! आपको SS 304 की कौन सी थिकनेस चाहिए? और क्या आप किसी विशेष आकार की तलाश में हैं?",
+          "timestamp": "2025-11-13T17:50:12.952322"
+        },
+        {
+          "role": "user",
+          "content": "मुझे four AMM thickness वाला चाहिए.",
+          "timestamp": "2025-11-13T17:50:24.739342"
+        },
+        {
+          "role": "assistant",
+          "content": "समझ गया! आपको SS 304 की 4mm थिकनेस चाहिए। क्या आप इसके लिए एक कोटेशन चाहते हैं? अगर हाँ, तो कृपया अपना नाम और ईमेल पता साझा करें, ताकि मैं आपको विवरण भेज सकूं।",
+          "timestamp": "2025-11-13T17:50:26.784874"
+        },
+        {
+          "role": "user",
+          "content": "Can you explain, what is SS three zero four?",
+          "timestamp": "2025-11-13T17:50:38.547686"
+        },
+        {
+          "role": "assistant",
+          "content": "Sure! SS 304, or Stainless Steel 304, is a versatile stainless steel grade known for its excellent corrosion resistance. It's made up of about 18% chromium and 8% nickel, making it great for a variety of applications. \n\nIt's commonly used in kitchen equipment, architectural applications, food processing equipment, and automotive trim due to its good durability and aesthetic appeal. If you’re interested, I can also provide more specific details like thickness options and pricing!",
+          "timestamp": "2025-11-13T17:50:42.121977"
+        },
+        {
+          "role": "user",
+          "content": "Thank you.",
+          "timestamp": "2025-11-13T17:50:54.679279"
+        },
+        {
+          "role": "assistant",
+          "content": "You’re welcome! If you have any more questions or need help with anything else, just let me know. Have a great day!",
+          "timestamp": "2025-11-13T17:50:55.793462"
+        }
+      ]
+    },
+    {
+      "session_id": "20251114_101635",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Not a receiving.",
+          "timestamp": "2025-11-13T17:42:22.705235"
+        },
+        {
+          "role": "assistant",
+          "content": "Gotcha! If there’s something specific you need or any other questions you have, just let me know. I'm here to help!",
+          "timestamp": "2025-11-13T17:42:24.246629"
+        },
+        {
+          "role": "user",
+          "content": "It's coming. It takes time.",
+          "timestamp": "2025-11-13T17:42:31.921225"
+        },
+        {
+          "role": "user",
+          "content": "Hello.",
+          "timestamp": "2025-11-13T17:44:53.361517"
+        },
+        {
+          "role": "assistant",
+          "content": "Hey there! How can I help you today?",
+          "timestamp": "2025-11-13T17:44:54.082374"
+        },
+        {
+          "role": "user",
+          "content": "How are you doing?",
+          "timestamp": "2025-11-13T17:44:59.555591"
+        },
+        {
+          "role": "assistant",
+          "content": "I’m doing well, thanks for asking! How about you? What’s on your mind today?",
+          "timestamp": "2025-11-13T17:45:00.730188"
+        },
+        {
+          "role": "user",
+          "content": "Do you have stainless teeth",
+          "timestamp": "2025-11-13T17:45:09.792805"
+        },
+        {
+          "role": "assistant",
+          "content": "Hmm, I think you might mean stainless steel sheets, right? If that's the case, I've got a few options for you! Just let me know if you want details on a specific grade or thickness.",
+          "timestamp": "2025-11-13T17:45:11.428446"
+        },
+        {
+          "role": "user",
+          "content": "Yes. I'm looking for SS three zero four.",
+          "timestamp": "2025-11-13T17:45:28.493945"
+        },
+        {
+          "role": "assistant",
+          "content": "Perfect, I’ve got just the thing! We have **SS 304** stainless steel sheets available. They come in various thicknesses from 0.5mm up to 12mm, and the price is around 15.5 AED per kg. \n\nThis grade is great for kitchen equipment, architectural applications, and food processing because of its excellent corrosion resistance. \n\nDo you need any specific thickness or size?",
+          "timestamp": "2025-11-13T17:45:31.450932"
+        },
+        {
+          "role": "user",
+          "content": "Can you please send it quotation?",
+          "timestamp": "2025-11-13T17:45:54.097174"
+        },
+        {
+          "role": "assistant",
+          "content": "Sure! I can get you a detailed quote for the SS 304 sheets. Could you please provide your name and email address so I can send over the specifics?",
+          "timestamp": "2025-11-13T17:45:55.769540"
+        },
+        {
+          "role": "user",
+          "content": "My name is Nehal.",
+          "timestamp": "2025-11-13T17:46:08.960215"
+        },
+        {
+          "role": "assistant",
+          "content": "Thanks, Nehal! Just to confirm, could you share your email address so I can send you the quotation?",
+          "timestamp": "2025-11-13T17:46:10.139291"
+        },
+        {
+          "role": "user",
+          "content": "निहाल at gmail dot com",
+          "timestamp": "2025-11-13T17:46:21.760139"
+        },
+        {
+          "role": "assistant",
+          "content": "Got it, Nehal! Just to confirm, your email is निहाल@gmail.com? I'll send over the quotation for the SS 304 sheets right away!",
+          "timestamp": "2025-11-13T17:46:23.012096"
+        },
+        {
+          "role": "user",
+          "content": "Thank you.",
+          "timestamp": "2025-11-13T17:46:37.118531"
+        },
+        {
+          "role": "assistant",
+          "content": "You're welcome! If you have any more questions or need further assistance, just let me know. Have a great day!",
+          "timestamp": "2025-11-13T17:46:38.124023"
+        },
+        {
+          "role": "user",
+          "content": "Hello.",
+          "timestamp": "2025-11-13T17:48:40.961730"
+        },
+        {
+          "role": "assistant",
+          "content": "Hey there! What can I help you with today?",
+          "timestamp": "2025-11-13T17:48:42.632342"
+        },
+        {
+          "role": "user",
+          "content": "How are you doing?",
+          "timestamp": "2025-11-13T17:48:49.126777"
+        },
+        {
+          "role": "assistant",
+          "content": "I’m doing well, thanks! How about you? What’s on your mind today?",
+          "timestamp": "2025-11-13T17:48:50.132007"
+        },
+        {
+          "role": "user",
+          "content": "I'm looking for RSS three zero four.",
+          "timestamp": "2025-11-13T17:48:57.595945"
+        },
+        {
+          "role": "assistant",
+          "content": "It sounds like you might be referring to SS 304, right? If so, I can help with that! Just let me know what specific size or thickness you need, and we can go from there.",
+          "timestamp": "2025-11-13T17:48:59.112382"
+        },
+        {
+          "role": "user",
+          "content": "It's four thickness.",
+          "timestamp": "2025-11-13T17:49:15.783435"
+        },
+        {
+          "role": "assistant",
+          "content": "Got it! We have SS 304 sheets available in various thicknesses, including 4mm. This grade is perfect for corrosion resistance and is commonly used in kitchens and food processing industries. \n\nWould you like a quote for the 4mm thickness?",
+          "timestamp": "2025-11-13T17:49:17.325407"
+        },
+        {
+          "role": "user",
+          "content": "Yes, generate a quotation.",
+          "timestamp": "2025-11-13T17:49:35.007410"
+        },
+        {
+          "role": "assistant",
+          "content": "Sure thing! I can get that quotation for you. Could you please provide your name and email address so I can send you the details?",
+          "timestamp": "2025-11-13T17:49:36.073054"
+        },
+        {
+          "role": "user",
+          "content": "Hi.",
+          "timestamp": "2025-11-13T17:50:04.734858"
+        },
+        {
+          "role": "assistant",
+          "content": "Hey there! How can I assist you today?",
+          "timestamp": "2025-11-13T17:50:05.433862"
+        },
+        {
+          "role": "user",
+          "content": "मुझे SS three zero four चाहिए.",
+          "timestamp": "2025-11-13T17:50:11.957181"
+        },
+        {
+          "role": "assistant",
+          "content": "बिल्कुल! आपको SS 304 की कौन सी थिकनेस चाहिए? और क्या आप किसी विशेष आकार की तलाश में हैं?",
+          "timestamp": "2025-11-13T17:50:12.952322"
+        },
+        {
+          "role": "user",
+          "content": "मुझे four AMM thickness वाला चाहिए.",
+          "timestamp": "2025-11-13T17:50:24.739342"
+        },
+        {
+          "role": "assistant",
+          "content": "समझ गया! आपको SS 304 की 4mm थिकनेस चाहिए। क्या आप इसके लिए एक कोटेशन चाहते हैं? अगर हाँ, तो कृपया अपना नाम और ईमेल पता साझा करें, ताकि मैं आपको विवरण भेज सकूं।",
+          "timestamp": "2025-11-13T17:50:26.784874"
+        },
+        {
+          "role": "user",
+          "content": "Can you explain, what is SS three zero four?",
+          "timestamp": "2025-11-13T17:50:38.547686"
+        },
+        {
+          "role": "assistant",
+          "content": "Sure! SS 304, or Stainless Steel 304, is a versatile stainless steel grade known for its excellent corrosion resistance. It's made up of about 18% chromium and 8% nickel, making it great for a variety of applications. \n\nIt's commonly used in kitchen equipment, architectural applications, food processing equipment, and automotive trim due to its good durability and aesthetic appeal. If you’re interested, I can also provide more specific details like thickness options and pricing!",
+          "timestamp": "2025-11-13T17:50:42.121977"
+        },
+        {
+          "role": "user",
+          "content": "Thank you.",
+          "timestamp": "2025-11-13T17:50:54.679279"
+        },
+        {
+          "role": "assistant",
+          "content": "You’re welcome! If you have any more questions or need help with anything else, just let me know. Have a great day!",
+          "timestamp": "2025-11-13T17:50:55.793462"
+        },
+        {
+          "role": "user",
+          "content": "Hola.",
+          "timestamp": "2025-11-14T10:16:57.586145"
+        }
+      ]
+    },
+    {
+      "session_id": "20251114_101728",
+      "messages": [
+        {
+          "role": "user",
+          "content": "It's coming. It takes time.",
+          "timestamp": "2025-11-13T17:42:31.921225"
+        },
+        {
+          "role": "user",
+          "content": "Hello.",
+          "timestamp": "2025-11-13T17:44:53.361517"
+        },
+        {
+          "role": "assistant",
+          "content": "Hey there! How can I help you today?",
+          "timestamp": "2025-11-13T17:44:54.082374"
+        },
+        {
+          "role": "user",
+          "content": "How are you doing?",
+          "timestamp": "2025-11-13T17:44:59.555591"
+        },
+        {
+          "role": "assistant",
+          "content": "I’m doing well, thanks for asking! How about you? What’s on your mind today?",
+          "timestamp": "2025-11-13T17:45:00.730188"
+        },
+        {
+          "role": "user",
+          "content": "Do you have stainless teeth",
+          "timestamp": "2025-11-13T17:45:09.792805"
+        },
+        {
+          "role": "assistant",
+          "content": "Hmm, I think you might mean stainless steel sheets, right? If that's the case, I've got a few options for you! Just let me know if you want details on a specific grade or thickness.",
+          "timestamp": "2025-11-13T17:45:11.428446"
+        },
+        {
+          "role": "user",
+          "content": "Yes. I'm looking for SS three zero four.",
+          "timestamp": "2025-11-13T17:45:28.493945"
+        },
+        {
+          "role": "assistant",
+          "content": "Perfect, I’ve got just the thing! We have **SS 304** stainless steel sheets available. They come in various thicknesses from 0.5mm up to 12mm, and the price is around 15.5 AED per kg. \n\nThis grade is great for kitchen equipment, architectural applications, and food processing because of its excellent corrosion resistance. \n\nDo you need any specific thickness or size?",
+          "timestamp": "2025-11-13T17:45:31.450932"
+        },
+        {
+          "role": "user",
+          "content": "Can you please send it quotation?",
+          "timestamp": "2025-11-13T17:45:54.097174"
+        },
+        {
+          "role": "assistant",
+          "content": "Sure! I can get you a detailed quote for the SS 304 sheets. Could you please provide your name and email address so I can send over the specifics?",
+          "timestamp": "2025-11-13T17:45:55.769540"
+        },
+        {
+          "role": "user",
+          "content": "My name is Nehal.",
+          "timestamp": "2025-11-13T17:46:08.960215"
+        },
+        {
+          "role": "assistant",
+          "content": "Thanks, Nehal! Just to confirm, could you share your email address so I can send you the quotation?",
+          "timestamp": "2025-11-13T17:46:10.139291"
+        },
+        {
+          "role": "user",
+          "content": "निहाल at gmail dot com",
+          "timestamp": "2025-11-13T17:46:21.760139"
+        },
+        {
+          "role": "assistant",
+          "content": "Got it, Nehal! Just to confirm, your email is निहाल@gmail.com? I'll send over the quotation for the SS 304 sheets right away!",
+          "timestamp": "2025-11-13T17:46:23.012096"
+        },
+        {
+          "role": "user",
+          "content": "Thank you.",
+          "timestamp": "2025-11-13T17:46:37.118531"
+        },
+        {
+          "role": "assistant",
+          "content": "You're welcome! If you have any more questions or need further assistance, just let me know. Have a great day!",
+          "timestamp": "2025-11-13T17:46:38.124023"
+        },
+        {
+          "role": "user",
+          "content": "Hello.",
+          "timestamp": "2025-11-13T17:48:40.961730"
+        },
+        {
+          "role": "assistant",
+          "content": "Hey there! What can I help you with today?",
+          "timestamp": "2025-11-13T17:48:42.632342"
+        },
+        {
+          "role": "user",
+          "content": "How are you doing?",
+          "timestamp": "2025-11-13T17:48:49.126777"
+        },
+        {
+          "role": "assistant",
+          "content": "I’m doing well, thanks! How about you? What’s on your mind today?",
+          "timestamp": "2025-11-13T17:48:50.132007"
+        },
+        {
+          "role": "user",
+          "content": "I'm looking for RSS three zero four.",
+          "timestamp": "2025-11-13T17:48:57.595945"
+        },
+        {
+          "role": "assistant",
+          "content": "It sounds like you might be referring to SS 304, right? If so, I can help with that! Just let me know what specific size or thickness you need, and we can go from there.",
+          "timestamp": "2025-11-13T17:48:59.112382"
+        },
+        {
+          "role": "user",
+          "content": "It's four thickness.",
+          "timestamp": "2025-11-13T17:49:15.783435"
+        },
+        {
+          "role": "assistant",
+          "content": "Got it! We have SS 304 sheets available in various thicknesses, including 4mm. This grade is perfect for corrosion resistance and is commonly used in kitchens and food processing industries. \n\nWould you like a quote for the 4mm thickness?",
+          "timestamp": "2025-11-13T17:49:17.325407"
+        },
+        {
+          "role": "user",
+          "content": "Yes, generate a quotation.",
+          "timestamp": "2025-11-13T17:49:35.007410"
+        },
+        {
+          "role": "assistant",
+          "content": "Sure thing! I can get that quotation for you. Could you please provide your name and email address so I can send you the details?",
+          "timestamp": "2025-11-13T17:49:36.073054"
+        },
+        {
+          "role": "user",
+          "content": "Hi.",
+          "timestamp": "2025-11-13T17:50:04.734858"
+        },
+        {
+          "role": "assistant",
+          "content": "Hey there! How can I assist you today?",
+          "timestamp": "2025-11-13T17:50:05.433862"
+        },
+        {
+          "role": "user",
+          "content": "मुझे SS three zero four चाहिए.",
+          "timestamp": "2025-11-13T17:50:11.957181"
+        },
+        {
+          "role": "assistant",
+          "content": "बिल्कुल! आपको SS 304 की कौन सी थिकनेस चाहिए? और क्या आप किसी विशेष आकार की तलाश में हैं?",
+          "timestamp": "2025-11-13T17:50:12.952322"
+        },
+        {
+          "role": "user",
+          "content": "मुझे four AMM thickness वाला चाहिए.",
+          "timestamp": "2025-11-13T17:50:24.739342"
+        },
+        {
+          "role": "assistant",
+          "content": "समझ गया! आपको SS 304 की 4mm थिकनेस चाहिए। क्या आप इसके लिए एक कोटेशन चाहते हैं? अगर हाँ, तो कृपया अपना नाम और ईमेल पता साझा करें, ताकि मैं आपको विवरण भेज सकूं।",
+          "timestamp": "2025-11-13T17:50:26.784874"
+        },
+        {
+          "role": "user",
+          "content": "Can you explain, what is SS three zero four?",
+          "timestamp": "2025-11-13T17:50:38.547686"
+        },
+        {
+          "role": "assistant",
+          "content": "Sure! SS 304, or Stainless Steel 304, is a versatile stainless steel grade known for its excellent corrosion resistance. It's made up of about 18% chromium and 8% nickel, making it great for a variety of applications. \n\nIt's commonly used in kitchen equipment, architectural applications, food processing equipment, and automotive trim due to its good durability and aesthetic appeal. If you’re interested, I can also provide more specific details like thickness options and pricing!",
+          "timestamp": "2025-11-13T17:50:42.121977"
+        },
+        {
+          "role": "user",
+          "content": "Thank you.",
+          "timestamp": "2025-11-13T17:50:54.679279"
+        },
+        {
+          "role": "assistant",
+          "content": "You’re welcome! If you have any more questions or need help with anything else, just let me know. Have a great day!",
+          "timestamp": "2025-11-13T17:50:55.793462"
+        },
+        {
+          "role": "user",
+          "content": "Hola.",
+          "timestamp": "2025-11-14T10:16:57.586145"
+        },
+        {
+          "role": "user",
+          "content": "Hi.",
+          "timestamp": "2025-11-14T10:17:33.418439"
+        },
+        {
+          "role": "assistant",
+          "content": "Hey there! What can I help you with today?",
+          "timestamp": "2025-11-14T10:17:35.125041"
+        }
+      ]
+    }
+  ]
+}

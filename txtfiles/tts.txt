@@ -1,25 +1,19 @@
-# app/azure_tts.py - Azure Cognitive Services Text-to-Speech with Config Integration
+# app/tts.py - IMPROVED VERSION WITH BETTER INTERRUPTION CONTROL AND CONFIG INTEGRATION
 import os
 import asyncio
 import threading
 from typing import Optional, Dict, Any
 from dotenv import load_dotenv
+from elevenlabs.client import ElevenLabs
 import pyaudio
 import wave
 import tempfile
 import io
+from pydub import AudioSegment
 import time
 import logging
 
-# Azure Cognitive Services SDK
-try:
-    import azure.cognitiveservices.speech as speechsdk
-    AZURE_AVAILABLE = True
-except ImportError:
-    AZURE_AVAILABLE = False
-    logging.warning("Azure Speech SDK not installed. Install with: pip install azure-cognitiveservices-speech")
-
-# Import config manager
+# NEW: Import config manager
 from app.config_manager import config_manager
 
 # Load environment variables
@@ -29,36 +23,34 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
-class AzureTTS:
+class ElevenLabsTTS:
     """
-    Azure Cognitive Services Text-to-Speech with robust audio interruption control and config integration
+    ElevenLabs Text-to-Speech with robust audio interruption control and config integration
     """
-
-    def __init__(self,
-                 voice_name: str = None,
-                 language: str = None,
-                 speech_synthesis_output_format: str = None):
-
+    
+    def __init__(self, 
+                 voice_id: str = None,  # UPDATED: Use config by default
+                 model_id: str = None,  # UPDATED: Use config by default
+                 output_format: str = None):  # UPDATED: Use config by default
+        
         # Get config values
         config = config_manager.get_config()
-
-        # Use config values with fallbacks
-        self.voice_name = voice_name or config.tts.azure_voice_name
-        self.language = language or config.tts.azure_language
-        self.output_format = speech_synthesis_output_format or config.tts.azure_output_format
+        
+        # UPDATED: Use config values with fallbacks
+        self.voice_id = voice_id or config.tts.voice_id
+        self.model_id = model_id or config.tts.model_id
+        self.output_format = output_format or config.tts.output_format
         self.timeout = config.tts.timeout
-        self.speech_config = None
-        self.synthesizer = None
-
+        self.client = None
+        
         # Audio playback control with thread-safe operations
         self._is_playing = False
         self._stop_playback = False
         self._current_stream = None
         self._pyaudio = None
-        self._playback_lock = threading.RLock()
+        self._playback_lock = threading.RLock()  # Use RLock for reentrant locks
         self._playback_thread = None
-
+        
         # Statistics
         self.stats = {
             'tts_requests': 0,
@@ -68,94 +60,55 @@ class AzureTTS:
             'errors': 0,
             'total_audio_duration': 0.0
         }
-
+        
         self._initialize_client_and_audio()
-
+    
     def _initialize_client_and_audio(self):
-        """Initialize the Azure Speech SDK and PyAudio"""
+        """Initialize the ElevenLabs client and PyAudio"""
         try:
             # Check if TTS is enabled
             config = config_manager.get_config()
             if not config.features.enable_tts:
-                logger.info("� TTS disabled in configuration")
+                logger.info("⏭️ TTS disabled in configuration")
                 return
-
-            if not AZURE_AVAILABLE:
-                logger.error("L Azure Speech SDK not available")
-                raise ImportError("Azure Speech SDK not installed")
-
-            # Get Azure credentials from environment
-            azure_key = os.getenv("AZURE_SPEECH_KEY")
-            azure_region = os.getenv("AZURE_SPEECH_REGION")
-
-            if not azure_key or not azure_region:
-                logger.error("AZURE_SPEECH_KEY or AZURE_SPEECH_REGION not found in environment variables")
-                raise ValueError("Azure credentials not found in environment variables")
-
-            # Configure Azure Speech SDK
-            self.speech_config = speechsdk.SpeechConfig(
-                subscription=azure_key,
-                region=azure_region
-            )
-
-            # Set voice name
-            self.speech_config.speech_synthesis_voice_name = self.voice_name
-
-            # Set output format
-            format_mapping = {
-                'audio-16khz-32kbitrate-mono-mp3': speechsdk.SpeechSynthesisOutputFormat.Audio16Khz32KBitRateMonoMp3,
-                'audio-16khz-64kbitrate-mono-mp3': speechsdk.SpeechSynthesisOutputFormat.Audio16Khz64KBitRateMonoMp3,
-                'audio-16khz-128kbitrate-mono-mp3': speechsdk.SpeechSynthesisOutputFormat.Audio16Khz128KBitRateMonoMp3,
-                'audio-24khz-48kbitrate-mono-mp3': speechsdk.SpeechSynthesisOutputFormat.Audio24Khz48KBitRateMonoMp3,
-                'audio-24khz-96kbitrate-mono-mp3': speechsdk.SpeechSynthesisOutputFormat.Audio24Khz96KBitRateMonoMp3,
-                'audio-24khz-160kbitrate-mono-mp3': speechsdk.SpeechSynthesisOutputFormat.Audio24Khz160KBitRateMonoMp3,
-                'riff-16khz-16bit-mono-pcm': speechsdk.SpeechSynthesisOutputFormat.Riff16Khz16BitMonoPcm,
-                'riff-24khz-16bit-mono-pcm': speechsdk.SpeechSynthesisOutputFormat.Riff24Khz16BitMonoPcm,
-            }
-
-            if self.output_format in format_mapping:
-                self.speech_config.set_speech_synthesis_output_format(format_mapping[self.output_format])
-            else:
-                logger.warning(f"Unknown output format: {self.output_format}, using default")
-
-            # Create synthesizer with None audio config to get raw audio data
-            # Setting audio_config=None tells the SDK to return audio data instead of playing it
-            self.synthesizer = speechsdk.SpeechSynthesizer(
-                speech_config=self.speech_config,
-                audio_config=None
-            )
-
+            
+            api_key = os.getenv("ELEVENLABS_API_KEY")
+            if not api_key:
+                logger.error("ELEVENLABS_API_KEY not found in environment variables")
+                raise ValueError("ELEVENLABS_API_KEY not found in environment variables")
+            
+            self.client = ElevenLabs(api_key=api_key)
+            
             # Initialize PyAudio
             self._pyaudio = pyaudio.PyAudio()
-
-            logger.info(f" Azure TTS initialized with PyAudio control")
-            logger.info(f"� Config: Voice: {self.voice_name}, Language: {self.language}, Format: {self.output_format}")
-            logger.info(f"� Timeout: {self.timeout}s, TTS Enabled: {config.features.enable_tts}")
-
+            
+            logger.info(f"✅ ElevenLabs TTS initialized with PyAudio control")
+            logger.info(f"⚙️ Config: Voice: {self.voice_id}, Model: {self.model_id}, Format: {self.output_format}")
+            logger.info(f"⚙️ Timeout: {self.timeout}s, TTS Enabled: {config.features.enable_tts}")
+                
         except Exception as e:
-            logger.error(f"L Failed to initialize Azure TTS: {e}")
-            self.speech_config = None
-            self.synthesizer = None
-
+            logger.error(f"❌ Failed to initialize ElevenLabs TTS: {e}")
+            self.client = None
+    
     @property
     def is_playing(self):
         """Thread-safe access to playing state"""
         with self._playback_lock:
             return self._is_playing
-
+    
     def stop_current_audio(self):
         """Force stop the currently playing audio - SYNCHRONOUS VERSION"""
         config = config_manager.get_config()
         if not config.features.enable_tts:
-            logger.debug("� TTS disabled - ignoring stop request")
+            logger.debug("⏭️ TTS disabled - ignoring stop request")
             return
-
+            
         with self._playback_lock:
             if self._is_playing:
-                logger.info("=� Force stopping current audio playback")
+                logger.info("🛑 Force stopping current audio playback")
                 self._stop_playback = True
                 self.stats['playback_interrupted'] += 1
-
+                
                 # Stop the PyAudio stream immediately
                 if self._current_stream:
                     try:
@@ -166,154 +119,160 @@ class AzureTTS:
                         logger.warning(f"Error closing stream: {e}")
                     finally:
                         self._current_stream = None
-
+                
                 self._is_playing = False
-
+                
                 # Wait for playback thread to finish if it exists
                 if self._playback_thread and self._playback_thread.is_alive():
                     logger.debug("Waiting for playback thread to terminate...")
-                    self._playback_thread.join(timeout=1.0)
+                    self._playback_thread.join(timeout=1.0)  # Wait up to 1 second
                     if self._playback_thread.is_alive():
                         logger.warning("Playback thread did not terminate cleanly")
-
+                
                 self._playback_thread = None
-
+        
         # Small delay to ensure cleanup
         time.sleep(0.05)
-        logger.info(" Audio playback stopped successfully")
-
+        logger.info("✅ Audio playback stopped successfully")
+    
     async def text_to_speech(self, text: str, play_audio: bool = True, interrupt_current: bool = True) -> Optional[bytes]:
         """
         Convert text to speech with robust interruption control
-
+        
         Args:
             text: Text to convert to speech
             play_audio: Whether to play the audio immediately
             interrupt_current: Whether to interrupt currently playing audio
-
+            
         Returns:
             Audio data as bytes if successful, None otherwise
         """
         # Check if TTS is enabled
         config = config_manager.get_config()
         if not config.features.enable_tts:
-            logger.info("� TTS disabled - skipping audio generation")
+            logger.info("⏭️ TTS disabled - skipping audio generation")
             return None
-
-        if not self.synthesizer:
-            logger.error("Azure synthesizer not initialized")
+            
+        if not self.client:
+            logger.error("ElevenLabs client not initialized")
             return None
-
+        
         if not text or not text.strip():
             logger.warning("Empty text provided for TTS")
             return None
-
+        
         try:
-            logger.info(f"=Converting text to speech (Azure): '{text[:50]}...'")
+            logger.info(f"Converting text to speech: '{text[:50]}...'")
             self.stats['tts_requests'] += 1
-
+            
             # Stop current playback if requested - DO THIS FIRST
             if interrupt_current:
+                # Call synchronous stop method
                 await asyncio.get_event_loop().run_in_executor(None, self.stop_current_audio)
-
+            
             # Generate audio data with timeout from config
             audio_data = await asyncio.wait_for(
                 self._generate_audio_data(text),
                 timeout=self.timeout
             )
-
+            
             if audio_data:
                 self.stats['audio_generated'] += 1
                 if play_audio:
                     await self._play_audio_async(audio_data)
-
+            
             return audio_data
-
+            
         except asyncio.TimeoutError:
-            logger.error(f"� TTS generation timed out after {self.timeout} seconds")
+            logger.error(f"⏰ TTS generation timed out after {self.timeout} seconds")
             self.stats['errors'] += 1
             return None
         except Exception as e:
-            logger.error(f"L TTS conversion failed: {e}")
+            logger.error(f"❌ TTS conversion failed: {e}")
             self.stats['errors'] += 1
             import traceback
             traceback.print_exc()
             return None
-
+    
     async def _generate_audio_data(self, text: str) -> Optional[bytes]:
-        """Generate audio data from text using Azure Speech SDK"""
+        """Generate audio data from text using ElevenLabs API"""
         try:
             loop = asyncio.get_event_loop()
-
-            def synthesize():
-                result = self.synthesizer.speak_text_async(text).get()
-
-                if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
-                    logger.info(f" Azure TTS conversion successful - {len(result.audio_data)} bytes")
-                    return result.audio_data
-                elif result.reason == speechsdk.ResultReason.Canceled:
-                    cancellation_details = result.cancellation_details
-                    logger.error(f"L Speech synthesis canceled: {cancellation_details.reason}")
-                    if cancellation_details.reason == speechsdk.CancellationReason.Error:
-                        logger.error(f"Error details: {cancellation_details.error_details}")
-                    return None
-                else:
-                    logger.error(f"L Unexpected result reason: {result.reason}")
-                    return None
-
-            audio_data = await loop.run_in_executor(None, synthesize)
+            audio_generator = await loop.run_in_executor(
+                None,
+                lambda: self.client.text_to_speech.convert(
+                    text=text,
+                    voice_id=self.voice_id,
+                    model_id=self.model_id,
+                    output_format=self.output_format,
+                )
+            )
+            
+            # Collect all audio data
+            audio_data = b""
+            for chunk in audio_generator:
+                if chunk:
+                    audio_data += chunk
+            
+            logger.info(f"✅ TTS conversion successful - {len(audio_data)} bytes")
             return audio_data
-
+            
         except Exception as e:
-            logger.error(f"L Audio generation failed: {e}")
+            logger.error(f"❌ Audio generation failed: {e}")
             return None
-
+    
     async def _play_audio_async(self, audio_data: bytes):
         """Play audio data asynchronously with interruption support"""
         if not audio_data:
             return
-
+        
         # Check if TTS is enabled
         config = config_manager.get_config()
         if not config.features.enable_tts:
-            logger.debug("� TTS disabled - skipping audio playback")
+            logger.debug("⏭️ TTS disabled - skipping audio playback")
             return
-
+        
         try:
-            logger.info("=Playing audio with interruption control...")
-
+            logger.info("Playing audio with interruption control...")
+            
+            # Convert MP3 to WAV for PyAudio playback
+            wav_data = await self._convert_mp3_to_wav(audio_data)
+            if not wav_data:
+                logger.error("Failed to convert audio to WAV format")
+                return
+            
             # Use thread pool executor for synchronous playback
             await asyncio.get_event_loop().run_in_executor(
-                None,
-                lambda: self._play_audio_sync(audio_data)
+                None, 
+                lambda: self._play_audio_sync(wav_data)
             )
-
+                
         except Exception as e:
-            logger.error(f"L Audio playback failed: {e}")
+            logger.error(f"❌ Audio playback failed: {e}")
             self.stats['errors'] += 1
-
-    def _play_audio_sync(self, audio_data: bytes):
+    
+    def _play_audio_sync(self, wav_data: bytes):
         """Synchronous audio playback with real-time interruption checking"""
         # Check if TTS is enabled
         config = config_manager.get_config()
         if not config.features.enable_tts:
             return
-
+            
         with self._playback_lock:
             if self._stop_playback:
                 logger.info("Playback aborted before starting")
                 return
-
+                
             self._is_playing = True
             self._stop_playback = False
-
+        
         try:
-            # Write audio data to temporary file
+            # Write WAV data to temporary file
             with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmp_file:
-                tmp_file.write(audio_data)
+                tmp_file.write(wav_data)
                 tmp_file.flush()
                 temp_filename = tmp_file.name
-
+            
             # Open the WAV file
             with wave.open(temp_filename, 'rb') as wf:
                 # Get audio parameters
@@ -321,12 +280,12 @@ class AzureTTS:
                 channels = wf.getnchannels()
                 frame_rate = wf.getframerate()
                 frames_per_buffer = 1024
-
+                
                 # Calculate audio duration for stats
                 n_frames = wf.getnframes()
                 duration = n_frames / float(frame_rate)
                 self.stats['total_audio_duration'] += duration
-
+                
                 # Open PyAudio stream
                 stream = self._pyaudio.open(
                     format=self._pyaudio.get_format_from_width(sample_width),
@@ -335,46 +294,63 @@ class AzureTTS:
                     output=True,
                     frames_per_buffer=frames_per_buffer
                 )
-
+                
                 with self._playback_lock:
                     self._current_stream = stream
-
+                
                 # Play audio in chunks with interruption checking
                 data = wf.readframes(frames_per_buffer)
                 while data and not self._stop_playback:
                     stream.write(data)
                     data = wf.readframes(frames_per_buffer)
-
+                
                 # Clean up stream
                 stream.stop_stream()
                 stream.close()
-
+                
                 with self._playback_lock:
                     self._current_stream = None
-
+            
             # Clean up temporary file
             try:
                 os.unlink(temp_filename)
             except Exception as e:
                 logger.warning(f"Could not delete temp file: {e}")
-
+            
             if self._stop_playback:
                 logger.info("Playback was interrupted")
             else:
-                logger.info(" Playback completed successfully")
+                logger.info("✅ Playback completed successfully")
                 self.stats['playback_completed'] += 1
-
+                
         except Exception as e:
-            logger.error(f"L Audio playback error: {e}")
+            logger.error(f"❌ Audio playback error: {e}")
             self.stats['errors'] += 1
         finally:
             with self._playback_lock:
                 self._is_playing = False
-
+    
+    async def _convert_mp3_to_wav(self, mp3_data: bytes) -> Optional[bytes]:
+        """Convert MP3 data to WAV format for PyAudio playback"""
+        try:
+            # Create AudioSegment from MP3 data
+            audio_segment = AudioSegment.from_mp3(io.BytesIO(mp3_data))
+            
+            # Convert to WAV
+            wav_io = io.BytesIO()
+            audio_segment.export(wav_io, format="wav")
+            wav_data = wav_io.getvalue()
+            
+            return wav_data
+            
+        except Exception as e:
+            logger.error(f"❌ MP3 to WAV conversion failed: {e}")
+            return None
+    
     async def generate_and_speak(self, llm_response: Dict[str, Any], interrupt_current: bool = True):
         """
         Generate speech from LLM response text
-
+        
         Args:
             llm_response: Response dictionary from LLM
             interrupt_current: Whether to interrupt current playback
@@ -382,43 +358,41 @@ class AzureTTS:
         # Check if TTS is enabled
         config = config_manager.get_config()
         if not config.features.enable_tts:
-            logger.debug("� TTS disabled - skipping speech generation")
+            logger.debug("⏭️ TTS disabled - skipping speech generation")
             return
-
+            
         if not llm_response or not llm_response.get('success'):
             logger.warning("Invalid LLM response for TTS")
             return
-
+        
         text = llm_response.get('text', '').strip()
         if not text:
             logger.warning("Empty text in LLM response")
             return
-
+        
         await self.text_to_speech(text, interrupt_current=interrupt_current)
-
+    
     def get_voice_info(self) -> Dict[str, Any]:
         """Get information about the current voice configuration"""
         config = config_manager.get_config()
-
+        
         return {
-            'provider': 'azure',
-            'voice_name': self.voice_name,
-            'language': self.language,
+            'voice_id': self.voice_id,
+            'model_id': self.model_id,
             'output_format': self.output_format,
             'timeout': self.timeout,
             'is_playing': self.is_playing,
-            'client_initialized': self.synthesizer is not None,
+            'client_initialized': self.client is not None,
             'pyaudio_initialized': self._pyaudio is not None,
             'tts_enabled': config.features.enable_tts,
             'config_source': 'config.json'
         }
-
+    
     def get_stats(self) -> Dict[str, Any]:
         """Get TTS system statistics"""
         config = config_manager.get_config()
-
+        
         stats = {
-            'provider': 'azure',
             'tts_requests': self.stats['tts_requests'],
             'audio_generated': self.stats['audio_generated'],
             'playback_completed': self.stats['playback_completed'],
@@ -428,47 +402,50 @@ class AzureTTS:
             'success_rate': f"{(self.stats['audio_generated'] / self.stats['tts_requests'] * 100) if self.stats['tts_requests'] > 0 else 0:.1f}%",
             'tts_enabled': config.features.enable_tts,
             'config': {
-                'voice_name': self.voice_name,
-                'language': self.language,
+                'voice_id': self.voice_id,
+                'model_id': self.model_id,
                 'output_format': self.output_format,
                 'timeout': self.timeout
             }
         }
-
+        
         return stats
-
+    
     async def test_connection(self) -> bool:
-        """Test connection to Azure Speech Services"""
+        """Test connection to ElevenLabs API"""
         config = config_manager.get_config()
         if not config.features.enable_tts:
-            logger.info("� TTS disabled - connection test skipped")
+            logger.info("⏭️ TTS disabled - connection test skipped")
             return False
-
-        if not self.synthesizer:
+            
+        if not self.client:
             return False
-
+        
         try:
-            # Try a simple synthesis as a connection test
-            test_audio = await self._generate_audio_data("Test")
-            return test_audio is not None
+            # Try to get voice info as a connection test
+            await asyncio.get_event_loop().run_in_executor(
+                None,
+                lambda: self.client.voices.get(self.voice_id)
+            )
+            return True
         except Exception as e:
-            logger.warning(f"� Azure connection test failed: {e}")
+            logger.warning(f"⚠️ ElevenLabs connection test failed: {e}")
             return False
-
+    
     def cleanup(self):
         """Cleanup resources - call this when shutting down"""
         config = config_manager.get_config()
         if not config.features.enable_tts:
             return
-
+            
         self.stop_current_audio()
         if self._pyaudio:
             try:
                 self._pyaudio.terminate()
-                logger.info(" PyAudio terminated")
+                logger.info("✅ PyAudio terminated")
             except Exception as e:
-                logger.warning(f"� Error terminating PyAudio: {e}")
-
+                logger.warning(f"⚠️ Error terminating PyAudio: {e}")
+    
     def __del__(self):
         """Cleanup resources"""
         self.cleanup()
@@ -476,40 +453,40 @@ class AzureTTS:
 
 # Example usage and testing
 async def main():
-    """Test the Azure TTS system with configuration"""
-    tts = AzureTTS()
-
+    """Test the TTS system with configuration"""
+    tts = ElevenLabsTTS()
+    
     # Test connection
-    print("Testing Azure Speech Services connection...")
+    print("Testing ElevenLabs connection...")
     if await tts.test_connection():
-        print(" Azure connection successful!")
+        print("✅ ElevenLabs connection successful!")
     else:
-        print("L Azure connection failed!")
+        print("❌ ElevenLabs connection failed!")
         return
-
+    
     # Test TTS with different texts
     test_texts = [
-        "Hello! This is a test of the Azure text to speech system.",
+        "Hello! This is a test of the text to speech system.",
         "How can I help you with steel and aluminum products today?",
         "We have stainless steel 304 and aluminum 5052 in stock."
     ]
-
+    
     for i, text in enumerate(test_texts, 1):
-        print(f"\n>� Test {i}: '{text}'")
+        print(f"\n🧪 Test {i}: '{text}'")
         audio_data = await tts.text_to_speech(text, play_audio=True, interrupt_current=True)
-
+        
         if audio_data:
-            print(f" TTS successful - {len(audio_data)} bytes")
+            print(f"✅ TTS successful - {len(audio_data)} bytes")
         else:
-            print("L TTS failed")
-
+            print("❌ TTS failed")
+        
         # Small delay between tests
         await asyncio.sleep(1)
-
+    
     # Print statistics
-    print(f"\n=� TTS Stats: {tts.get_stats()}")
-    print(f" Voice Info: {tts.get_voice_info()}")
-
+    print(f"\n📊 TTS Stats: {tts.get_stats()}")
+    print(f"🔊 Voice Info: {tts.get_voice_info()}")
+    
     # Cleanup
     tts.cleanup()
 

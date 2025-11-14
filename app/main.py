@@ -14,6 +14,7 @@ import base64
 from app.nova import DeepgramNovaSTT
 from app.llm import RemoteGPTLLM
 from app.tts import ElevenLabsTTS
+from app.azure_tts import AzureTTS
 from app.productsearch import ProductSearch
 from app.database import customer_db, CustomerDatabase
 from app.config_manager import config_manager  # NEW: Import config manager
@@ -131,18 +132,36 @@ async def initialize_services():
         )
         print("✅ Deepgram Nova initialized successfully")
         
-        # Initialize ElevenLabs TTS if enabled
+        # Initialize TTS if enabled (ElevenLabs or Azure based on config)
         if config.features.enable_tts:
-            print("🔊 Initializing ElevenLabs TTS...")
+            tts_provider = config.tts.provider.lower()
+            print(f"🔊 Initializing {tts_provider.upper()} TTS...")
+
             try:
-                tts_engine = ElevenLabsTTS(
-                    voice_id=config.tts.voice_id,
-                    model_id=config.tts.model_id,
-                    output_format=config.tts.output_format
-                )
-                print("✅ ElevenLabs TTS initialized successfully")
+                if tts_provider == "azure":
+                    tts_engine = AzureTTS(
+                        voice_name=config.tts.azure_voice_name,
+                        language=config.tts.azure_language,
+                        speech_synthesis_output_format=config.tts.azure_output_format
+                    )
+                    print("✅ Azure TTS initialized successfully")
+                elif tts_provider == "elevenlabs":
+                    tts_engine = ElevenLabsTTS(
+                        voice_id=config.tts.voice_id,
+                        model_id=config.tts.model_id,
+                        output_format=config.tts.output_format
+                    )
+                    print("✅ ElevenLabs TTS initialized successfully")
+                else:
+                    print(f"❌ Unknown TTS provider: {tts_provider}. Falling back to ElevenLabs")
+                    tts_engine = ElevenLabsTTS(
+                        voice_id=config.tts.voice_id,
+                        model_id=config.tts.model_id,
+                        output_format=config.tts.output_format
+                    )
+                    print("✅ ElevenLabs TTS initialized successfully (fallback)")
             except Exception as e:
-                print(f"❌ Failed to initialize ElevenLabs TTS: {e}")
+                print(f"❌ Failed to initialize {tts_provider.upper()} TTS: {e}")
                 tts_engine = None
         else:
             print("⏭️ TTS disabled in config")
@@ -236,14 +255,31 @@ async def handle_assistant_transcription_callback(transcription_data: Dict, clie
         if client_websocket.client_state.name != "CONNECTED":
             print("⚠️ WebSocket not connected, skipping transcription send")
             return
-        
+
+        # IMMEDIATE INTERRUPTION: Stop TTS as soon as user starts speaking
+        # This works for both interim and final transcriptions
+        if transcription_data.get('text', '').strip() and tts_engine and config.features.enable_tts:
+            # Only interrupt if there's actual text (user is speaking)
+            if tts_engine.is_playing:
+                print("🛑 User started speaking - interrupting TTS immediately")
+                try:
+                    # Non-blocking stop - don't wait for completion
+                    asyncio.create_task(
+                        asyncio.get_event_loop().run_in_executor(
+                            None,
+                            tts_engine.stop_current_audio
+                        )
+                    )
+                except Exception as e:
+                    print(f"⚠️ Error interrupting TTS: {e}")
+
         # Send transcription to client
         try:
             await client_websocket.send_json(transcription_data)
         except Exception as e:
             print(f"⚠️ Failed to send transcription: {e}")
             return
-        
+
         if transcription_data.get('is_final', False):
             manager.increment_utterances(client_websocket)
             final_text = transcription_data['text']

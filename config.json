@@ -21,10 +21,14 @@
     "temperature": 1
   },
   "tts": {
+    "provider": "azure",
+    "timeout": 15,
     "voice_id": "iP95p4xoKVk53GoZ742B",
     "model_id": "eleven_multilingual_v2",
     "output_format": "mp3_44100_128",
-    "timeout": 15
+    "azure_voice_name": "en-US-Ava:DragonHDLatestNeural",
+    "azure_language": "auto",
+    "azure_output_format": "riff-24khz-16bit-mono-pcm"
   },
   "product_search": {
     "product_file": "data/product.json",

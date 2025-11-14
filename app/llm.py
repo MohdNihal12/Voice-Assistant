@@ -7,6 +7,7 @@ from typing import Dict, Any, Optional, List
 import logging
 from openai import AsyncOpenAI
 from typing import TYPE_CHECKING
+from pathlib import Path
 
 # NEW: Import config manager
 from app.config_manager import config_manager
@@ -23,23 +24,24 @@ class RemoteGPTLLM:
     """
     
     def __init__(
-        self, 
+        self,
         api_key: Optional[str] = None,
         model: str = None,  # UPDATED: Use config by default
         timeout: int = None,  # UPDATED: Use config by default
         max_conversation_turns: int = 20,  # Increased for better context
         system_prompt: Optional[str] = None,
         product_search: Optional[Any] = None,
-        customer_db: Optional['CustomerDatabase'] = None
+        customer_db: Optional['CustomerDatabase'] = None,
+        conversation_file: str = "conversation.json"  # NEW: File to store conversations
     ):
         # Get config values
         config = config_manager.get_config()
-        
+
         # Get API key from parameter or environment variable
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
         if not self.api_key:
             raise ValueError("OpenAI API key is required. Set OPENAI_API_KEY environment variable or pass api_key parameter.")
-        
+
         # UPDATED: Use config values with fallbacks
         self.model = model or config.llm.model
         self.timeout = timeout or config.llm.timeout
@@ -48,6 +50,14 @@ class RemoteGPTLLM:
         self.max_conversation_turns = max_conversation_turns
         self.conversation_history = []
         self.product_search = product_search
+
+        # NEW: Conversation file management
+        self.conversation_file = conversation_file
+        self.conversation_file_path = Path(conversation_file)
+        self.session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        # Load existing conversation history if file exists
+        self._load_conversation_history()
         
         # Initialize OpenAI client
         self.client = AsyncOpenAI(
@@ -384,17 +394,99 @@ No specific product matches found for the query. Consider asking clarifying ques
         
         return messages
     
+    def _load_conversation_history(self):
+        """Load conversation history from JSON file"""
+        try:
+            if self.conversation_file_path.exists():
+                with open(self.conversation_file_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    # Load only the conversation_history array
+                    if isinstance(data, dict) and 'conversations' in data:
+                        # If we have a sessions-based structure, load the last session
+                        if data['conversations']:
+                            last_session = data['conversations'][-1]
+                            self.conversation_history = last_session.get('messages', [])
+                            logger.info(f"📂 Loaded {len(self.conversation_history)} messages from previous session")
+                    elif isinstance(data, list):
+                        # If it's a simple list of messages
+                        self.conversation_history = data
+                        logger.info(f"📂 Loaded {len(self.conversation_history)} messages from conversation file")
+            else:
+                logger.info(f"📝 No existing conversation file found. Starting fresh.")
+        except Exception as e:
+            logger.warning(f"⚠️ Could not load conversation history: {e}")
+            self.conversation_history = []
+
+    def _save_conversation_history(self):
+        """Save conversation history to JSON file"""
+        try:
+            # Create the directory if it doesn't exist
+            self.conversation_file_path.parent.mkdir(parents=True, exist_ok=True)
+
+            # Prepare the data structure
+            data = {
+                'session_id': self.session_id,
+                'started_at': self.conversation_history[0]['timestamp'] if self.conversation_history else datetime.now().isoformat(),
+                'last_updated': datetime.now().isoformat(),
+                'model': self.model,
+                'total_turns': len(self.conversation_history) // 2,
+                'conversations': [
+                    {
+                        'session_id': self.session_id,
+                        'messages': self.conversation_history
+                    }
+                ]
+            }
+
+            # If file exists, append to it as a new session
+            if self.conversation_file_path.exists():
+                try:
+                    with open(self.conversation_file_path, 'r', encoding='utf-8') as f:
+                        existing_data = json.load(f)
+                        if isinstance(existing_data, dict) and 'conversations' in existing_data:
+                            # Check if current session already exists
+                            session_exists = False
+                            for conv in existing_data['conversations']:
+                                if conv.get('session_id') == self.session_id:
+                                    # Update existing session
+                                    conv['messages'] = self.conversation_history
+                                    session_exists = True
+                                    break
+
+                            if not session_exists:
+                                # Add new session
+                                existing_data['conversations'].append({
+                                    'session_id': self.session_id,
+                                    'messages': self.conversation_history
+                                })
+
+                            existing_data['last_updated'] = datetime.now().isoformat()
+                            data = existing_data
+                except Exception as e:
+                    logger.warning(f"⚠️ Could not read existing file, creating new: {e}")
+
+            # Write to file with pretty formatting
+            with open(self.conversation_file_path, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+
+            logger.info(f"💾 Saved conversation to {self.conversation_file}")
+        except Exception as e:
+            logger.error(f"❌ Failed to save conversation history: {e}")
+
     def _add_to_conversation(self, role: str, content: str):
-        """Add a message to conversation history"""
+        """Add a message to conversation history and save to file"""
         self.conversation_history.append({
             'role': role,
             'content': content,
             'timestamp': datetime.now().isoformat()
         })
-        
+
         # Trim history if it gets too long
         if len(self.conversation_history) > self.max_conversation_turns * 2:
             self.conversation_history = self.conversation_history[-self.max_conversation_turns * 2:]
+
+        # Save to file after each message
+        self._save_conversation_history()
     
     def _extract_basic_info(self, user_message: str) -> tuple:
         """
@@ -495,10 +587,11 @@ No specific product matches found for the query. Consider asking clarifying ques
                 messages=messages,
                 max_tokens=self.max_tokens,  # UPDATED: Use config
                 temperature=self.temperature,  # UPDATED: Use config
-                timeout=self.timeout
+                timeout=self.timeout,
             )
             
             # Extract response text
+            
             response_text = response.choices[0].message.content.strip()
             
             if not response_text:
@@ -605,9 +698,16 @@ No specific product matches found for the query. Consider asking clarifying ques
             return False
     
     def clear_conversation_history(self):
-        """Clear the conversation history"""
+        """Clear the conversation history and save to file"""
         previous_turns = len(self.conversation_history) // 2
         self.conversation_history.clear()
+
+        # Create new session ID for fresh start
+        self.session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        # Save the cleared state
+        self._save_conversation_history()
+
         logger.info(f"🗑️ Cleared conversation history ({previous_turns} turns)")
     
     def get_conversation_stats(self) -> Dict[str, Any]:
